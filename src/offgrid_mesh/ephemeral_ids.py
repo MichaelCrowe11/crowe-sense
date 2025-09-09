@@ -12,10 +12,13 @@ import hashlib
 import secrets
 import struct
 import time
+import logging
 from typing import Optional, Dict, List, Tuple
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.backends import default_backend
+
+from .utils import EphemeralIDError
 
 
 class EphemeralIDManager:
@@ -44,19 +47,22 @@ class EphemeralIDManager:
             id_length: Length of ephemeral IDs in bytes
         """
         if len(device_id) != 32:
-            raise ValueError("Device ID must be 32 bytes")
+            raise EphemeralIDError("Device ID must be 32 bytes")
         if len(shared_secret) != 32:
-            raise ValueError("Shared secret must be 32 bytes")
+            raise EphemeralIDError("Shared secret must be 32 bytes")
             
         self.device_id = device_id
         self.shared_secret = shared_secret
         self.rotation_interval = rotation_interval
         self.id_length = id_length
+        self.logger = logging.getLogger(f"offgrid_mesh.ephemeral_ids.{device_id.hex()[:8]}")
         
         self._current_ephemeral_id: Optional[bytes] = None
         self._current_epoch: Optional[int] = None
         self._rotation_task: Optional[asyncio.Task] = None
         self._peer_ids: Dict[bytes, Tuple[bytes, int]] = {}  # ephemeral_id -> (device_id, epoch)
+        
+        self.logger.info(f"Initialized ephemeral ID manager with rotation interval {rotation_interval}s")
         
     def _get_epoch(self, timestamp: Optional[float] = None) -> int:
         """Get the current epoch based on timestamp and rotation interval."""
@@ -92,6 +98,7 @@ class EphemeralIDManager:
         if self._current_epoch != current_epoch:
             self._current_ephemeral_id = self._derive_ephemeral_id(self.device_id, current_epoch)
             self._current_epoch = current_epoch
+            self.logger.debug(f"Generated new ephemeral ID for epoch {current_epoch}: {self._current_ephemeral_id.hex()}")
             
         return self._current_ephemeral_id
     
@@ -111,6 +118,7 @@ class EphemeralIDManager:
             if expected_id == ephemeral_id:
                 # Cache the mapping for fast lookup
                 self._peer_ids[ephemeral_id] = (suspected_device_id, test_epoch)
+                self.logger.debug(f"Verified ephemeral ID {ephemeral_id.hex()} for device {suspected_device_id.hex()[:8]}")
                 return True
                 
         return False
@@ -188,7 +196,7 @@ class EphemeralIDManager:
                 raise
             except Exception as e:
                 # Log error and continue
-                print(f"Error in rotation loop: {e}")
+                self.logger.error(f"Error in rotation loop: {e}")
                 await asyncio.sleep(60)  # Wait a minute before retrying
     
     def _cleanup_peer_ids(self) -> None:
