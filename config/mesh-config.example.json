@@ -1,0 +1,19 @@
+{
+  "device_id": "your_32_byte_device_id_in_hex_here",
+  "shared_secret": "your_32_byte_shared_secret_in_hex_here",
+  "mesh_settings": {
+    "rotation_interval": 300,
+    "scan_interval": 1.0,
+    "device_name": "OffGridMesh",
+    "id_length": 8
+  },
+  "logging": {
+    "level": "INFO",
+    "log_file": null
+  },
+  "ble_settings": {
+    "service_uuid": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+    "connect_timeout": 10.0,
+    "max_connections": 5
+  }
+}

@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: MIT
+# OffGrid Mesh — BLE Transport (discovery) with rotating ephemeral IDs (v2)
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "crowe-sense-offgrid-mesh"
+version = "2.0.0"
+authors = [
+    {name = "CroweSense Project"}
+]
+description = "OffGrid Mesh — BLE Transport (discovery) with rotating ephemeral IDs (v2)"
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers", 
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Communications",
+    "Topic :: Internet", 
+    "Topic :: System :: Networking",
+    "Topic :: Security :: Cryptography",
+]
+dependencies = [
+    "bleak>=0.21.0",
+    "cryptography>=41.0.0",
+    "asyncio-mqtt>=0.13.0",
+    "pycryptodome>=3.19.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0", 
+    "black>=22.0.0",
+    "flake8>=5.0.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/MichaelCrowe11/crowe-sense"
+"Bug Tracker" = "https://github.com/MichaelCrowe11/crowe-sense/issues"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.black]
+line-length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"

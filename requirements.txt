@@ -1,0 +1,4 @@
+bleak>=0.21.0
+cryptography>=41.0.0
+asyncio-mqtt>=0.13.0
+pycryptodome>=3.19.0
