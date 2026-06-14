@@ -1,0 +1,38 @@
+category,part,model_or_pn,qty,unit_cost_usd,vendor,notes
+Compute,Raspberry Pi 5 8GB,SC1112,1,80.00,Adafruit,Boot from microSD or NVMe
+Compute,Active Cooler for Pi 5,SC1148,1,5.00,Adafruit,Required - Pi 5 throttles without it
+Compute,microSD 32GB A2,SanDisk Extreme,1,12.00,Amazon,Boot media
+Storage,1TB Portable HDD,WD Elements 2.5,1,55.00,User-supplied,Already procured
+Storage,USB 3.0 right-angle cable 150mm,Generic,1,4.00,Amazon,Storage bay to Pi
+Storage,Closed-cell foam pad 3mm,Generic,2,1.00,McMaster,Drive cradle
+Cellular,AT&T Nighthawk M6,MR6500,1,200.00,User-supplied,Already procured
+Cellular,USB-C to USB-A power cable 300mm,Generic,1,5.00,Amazon,Hotspot power
+Cellular,USB-C to USB-A data cable 300mm,Generic,1,5.00,Amazon,Hotspot tether
+Cellular,TS-9 to SMA-F pigtail 150mm,Generic,2,8.00,Amazon,Antenna passthrough
+Cellular,4G/5G antenna SMA-M paddle,Generic 7dBi,2,15.00,Amazon,Rear panel mount
+Sensors,SCD41 CO2 breakout,Adafruit 5190,1,55.00,Adafruit,I2C 0x62
+Sensors,SHT45 T/RH breakout,Adafruit 5665,1,9.00,Adafruit,I2C 0x44
+Sensors,BME688 IAQ breakout,Adafruit 5046,1,20.00,Adafruit,I2C 0x76
+Sensors,VEML7700 lux breakout,Adafruit 4162,1,5.00,Adafruit,I2C 0x10
+Sensors,Pi Camera Module 3 standard,SC0872,1,25.00,Adafruit,Optional - vision variant
+Power,12V/3A DC adapter,2.1x5.5mm center+,1,15.00,Amazon,Barrel jack input
+Power,Buck converter 5V/5A,Pololu D24V50F5,1,15.00,Pololu,12V to 5V
+Power,USB-C PD trigger 5V,Generic ZY12PDN,1,6.00,Amazon,For Pi 5 PD negotiation
+Power,3A polyfuse 30V,Littelfuse RXEF300,1,1.00,Digikey,F1 protection
+Power,Panel-mount barrel jack,Generic,1,2.00,Amazon,Rear panel input
+LEDs,5mm LED green,Generic,1,0.50,Digikey,Heartbeat
+LEDs,5mm LED amber,Generic,1,0.50,Digikey,Sync activity
+LEDs,5mm LED red,Generic,1,0.50,Digikey,Fault
+LEDs,470 ohm resistor 1/4W,Generic,3,0.10,Digikey,LED current limit
+Fasteners,M3 heat-set insert,McMaster 94459A130,7,0.30,McMaster,Lid/tray/retention
+Fasteners,M2.5 heat-set insert,McMaster 94459A102,10,0.30,McMaster,Pi/sensor/buck
+Fasteners,M3 x 8mm socket head,Generic,8,0.10,McMaster,Lid + antennas
+Fasteners,M2.5 x 6mm socket head,Generic,4,0.10,McMaster,Pi mount
+Fasteners,M2.5 x 8mm socket head,Generic,10,0.10,McMaster,Deck + buck + sensor
+Wiring,22 AWG silicone wire kit,Generic,1,12.00,Amazon,Power + GPIO
+Wiring,2.2k ohm resistor 1/4W,Generic,2,0.10,Digikey,I2C pull-ups
+Wiring,Female-female jumper kit,Generic,1,5.00,Amazon,Sensor I2C harness
+Wiring,Heat shrink kit,Generic,1,8.00,Amazon,Wire termination
+Enclosure,PETG filament 1kg,Polymaker / Prusament,1,25.00,Amazon,Body + lid + sensor head
+Enclosure,Silicone pad 2mm sheet,Generic,1,5.00,Amazon,Hotspot cradle
+Enclosure,Inventory label adhesive,Generic,1,1.00,Amazon,Rear panel
