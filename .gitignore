@@ -1,0 +1,27 @@
+# OpenSCAD / CAD
+*.stl
+*.3mf
+*.gcode
+*.step
+*.f3d
+*.SLDPRT
+*.SLDASM
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Local config
+.env
+/etc/crowe/local.toml

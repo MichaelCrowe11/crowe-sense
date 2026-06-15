@@ -1,0 +1,12 @@
+[Unit]
+Description=Crowe Sensor — hourly health snapshot timer
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1h
+RandomizedDelaySec=2min
+AccuracySec=10s
+Persistent=true
+
+[Install]
+WantedBy=timers.target

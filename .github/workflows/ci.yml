@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  firmware:
+    name: Firmware — lint + tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: firmware
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: firmware/pyproject.toml
+
+      - name: Install firmware (with dev deps)
+        run: pip install -e ".[dev]"
+
+      - name: Ruff
+        run: ruff check crowe/ tests/
+
+      - name: Pytest
+        run: pytest -v --cov=crowe --cov-report=term-missing
+
+  enclosure:
+    name: Enclosure — OpenSCAD render
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: hardware/enclosure
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install OpenSCAD + Xvfb
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openscad xvfb
+
+      - name: Render every part
+        run: |
+          for part in body lid sensor_head storage_tray hotspot_bar; do
+            echo "=== $part ==="
+            xvfb-run -a openscad \
+              -D "build_part=\"$part\"" \
+              -o "/tmp/${part}.stl" \
+              crowe_sensor_enclosure.scad
+            test -s "/tmp/${part}.stl" || (echo "empty STL for $part"; exit 1)
+          done
+
+      - name: Upload STLs as build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: enclosure-stls
+          path: /tmp/*.stl
+          retention-days: 14
