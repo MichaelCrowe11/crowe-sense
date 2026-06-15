@@ -68,9 +68,10 @@ a temporary SQLite file. No hardware needed — CI passes on any Linux.
 
 ## What's done in this commit
 
-- [x] All four sensor drivers with real I2C protocol (SCD41/SHT45 with
+- [x] All four sensor drivers with real I2C protocol: SCD41/SHT45 with
       Sensirion CRC, VEML7700 with documented lux scaling, BME688 with
-      raw forced-mode reads).
+      full on-device compensation (T/P/H/gas polynomials per Bosch
+      reference, plus gas_valid + heat_stab gating).
 - [x] Sampler with per-sensor asyncio tasks, exponential backoff,
       WAL-mode SQLite logging.
 - [x] Uploader with batched gzipped jsonl, ed25519 signing, route-aware
@@ -86,9 +87,9 @@ a temporary SQLite file. No hardware needed — CI passes on any Linux.
 
 ## What's not done yet
 
-- [ ] BME688 calibration polynomial — currently ships raw counts and
-      delegates to the cloud receiver.
-- [ ] BSEC IAQ algorithm (Bosch closed-source, optional).
+- [ ] BSEC IAQ algorithm (Bosch closed-source, optional). The driver
+      ships calibrated gas resistance; cloud-side time-series IAQ is
+      next.
 - [ ] Camera capture + edge inference service.
 - [ ] OTA agent that consumes `manifest_url`.
 - [ ] Debian packaging (`.deb`) — install via pip for now.
