@@ -62,7 +62,7 @@ divider_z = floor + drive_h + drive_slack[2] + 4;  // z of divider top face
 head_h    = 25;   // sensor head height above main body
 head_vent_d  = 3.0;
 head_vent_n  = 4;   // vents per side
-head_lens_d  = 7.0; // camera lens hole
+head_lens_d  = 7.0; // camera lens hole (only cut when camera=true)
 
 // --- Rear I/O panel cutouts ---
 barrel_jack_d = 8.2;            // 2.1×5.5 panel jack
@@ -73,6 +73,8 @@ rj45          = [16.5, 14.5];   // RJ45 service jack
 build_part = "body";   // one of: "body", "lid", "sensor_head",
                        //         "storage_tray", "hotspot_bar",
                        //         "exploded"  (preview only)
+camera = false;        // toggle to cut the Pi Camera Module 3 lens hole
+                       //   in the sensor head (default off)
 outdoor = false;       // future IP54 variant — stub only
 
 // ============================================================
@@ -260,9 +262,10 @@ module sensor_head() {
                 translate([20, side, head_h * 0.4])
                     rotate([90, 0, 0])
                         vent_array(head_vent_n, 8, head_vent_d, wall + 0.2);
-            // Camera lens hole, centered
-            translate([ext_w/2, ext_d/2, head_h - ceil - 0.1])
-                cylinder(h = ceil + 0.2, d = head_lens_d);
+            // Camera lens hole, centered — only when camera=true
+            if (camera)
+                translate([ext_w/2, ext_d/2, head_h - ceil - 0.1])
+                    cylinder(h = ceil + 0.2, d = head_lens_d);
             // VEML7700 light window
             translate([ext_w/2 + 25, ext_d/2 - 5, head_h - ceil - 0.1])
                 cube([10, 10, ceil + 0.2]);
