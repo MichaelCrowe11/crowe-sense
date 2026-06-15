@@ -1,0 +1,15 @@
+[Unit]
+Description=Crowe Sensor — hourly health snapshot
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/etc/crowe/node.toml
+
+[Service]
+Type=oneshot
+User=crowe
+Group=crowe
+ExecStart=/usr/local/bin/crowe-health --endpoint=https://ingest.crowe-sense.io/v1/health
+ProtectSystem=strict
+ProtectHome=true
+NoNewPrivileges=true
+PrivateTmp=true

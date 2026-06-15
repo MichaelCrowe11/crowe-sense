@@ -1,0 +1,21 @@
+# Example /etc/crowe/node.toml — copy to /etc/crowe/node.toml
+# In production, this is written by `crowe-provision`, not edited by hand.
+
+node_id = "cs-EXAMPLE"
+site = "mycology-lab-01"
+storage_mount = "/mnt/crowe"
+manifest_url = "https://manifests.crowe-sense.io/cs-EXAMPLE/current.json"
+private_key_path = "/etc/crowe/node.key"
+
+[s3]
+bucket = "crowe-sense-telemetry"
+prefix = "raw"
+region = "us-east-1"
+# endpoint_url = "https://minio.local"   # for local dev / on-prem
+
+[sampler.periods]
+# Per-sensor cadence overrides (seconds). Defaults live in the driver.
+# scd41    = 5.0
+# sht45    = 1.0
+# bme688   = 3.0
+# veml7700 = 1.0

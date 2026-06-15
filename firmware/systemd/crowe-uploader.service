@@ -1,0 +1,22 @@
+[Unit]
+Description=Crowe Sensor — telemetry uploader
+After=network-online.target crowe-sampler.service
+Wants=network-online.target
+ConditionPathExists=/etc/crowe/node.toml
+
+[Service]
+Type=simple
+User=crowe
+Group=crowe
+ExecStart=/usr/local/bin/crowe-uploader
+Restart=on-failure
+RestartSec=10
+MemoryMax=128M
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/mnt/crowe
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

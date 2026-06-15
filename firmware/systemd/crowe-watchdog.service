@@ -1,0 +1,19 @@
+[Unit]
+Description=Crowe Sensor — liveness watchdog and LEDs
+After=local-fs.target
+ConditionPathExists=/etc/crowe/node.toml
+
+[Service]
+Type=simple
+User=crowe
+Group=crowe
+ExecStart=/usr/local/bin/crowe-watchdog
+Restart=on-failure
+RestartSec=5
+MemoryMax=64M
+SupplementaryGroups=gpio
+NoNewPrivileges=true
+ReadWritePaths=/run/crowe
+
+[Install]
+WantedBy=multi-user.target

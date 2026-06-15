@@ -1,0 +1,25 @@
+[Unit]
+Description=Crowe Sensor — sensor sampler
+Documentation=https://github.com/MichaelCrowe11/crowe-sense
+After=network.target local-fs.target
+Requires=mnt-crowe.mount
+ConditionPathExists=/etc/crowe/node.toml
+
+[Service]
+Type=simple
+User=crowe
+Group=crowe
+ExecStart=/usr/local/bin/crowe-sampler
+Restart=on-failure
+RestartSec=5
+Nice=-5
+MemoryMax=256M
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/mnt/crowe
+NoNewPrivileges=true
+PrivateTmp=true
+SupplementaryGroups=i2c gpio
+
+[Install]
+WantedBy=multi-user.target
