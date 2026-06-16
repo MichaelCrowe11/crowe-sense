@@ -1,5 +1,10 @@
 # crowe-sense
 
+[![CI](https://github.com/MichaelCrowe11/crowe-sense/actions/workflows/ci.yml/badge.svg)](https://github.com/MichaelCrowe11/crowe-sense/actions/workflows/ci.yml)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+
+> **Status:** Firmware implemented and tested (25 hardware-free unit tests, green CI: lint + tests + per-part STL renders). Enclosure is parametric OpenSCAD with a published BOM. Hardware bring-up validation is the remaining frontier.
+
 Crowe Sensor — modular, 3D-printable environmental sensing node designed for
 remote / off-grid deployment. Built around a Raspberry Pi 5 compute core with
 dedicated, swappable bays for a **1 TB portable storage drive** and an
@@ -22,7 +27,7 @@ crowe-sense/
 │   │   └── README.md                     Print settings & tolerances
 │   ├── pinouts/sensor_pinout.md         GPIO/I2C/USB pin map
 │   └── bom.csv                          Bill of materials
-└── firmware/README.md                    Service layout (impl follows)
+└── firmware/                             Pi-side Python services (implemented, 25 tests passing)
 ```
 
 ## System at a glance

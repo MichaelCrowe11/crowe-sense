@@ -58,7 +58,7 @@ drive is missing (we degrade to NVMe ring buffer).
 ## Sampler
 
 ```python
-# crowe/sampler.py (sketch — full impl follows in a later commit)
+# crowe/sampler.py (shape shown below; see firmware/crowe/sampler.py for the implementation)
 async def main():
     bus = SMBus(1)
     sensors = [SCD41(bus), SHT45(bus), BME688(bus), VEML7700(bus)]
