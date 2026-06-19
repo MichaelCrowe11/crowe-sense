@@ -86,7 +86,7 @@ class Calibration:
 
     @classmethod
     def from_blocks(cls, blk1: list[int], blk2: list[int], heat_range: int,
-                    heat_val: int, range_sw_err: int) -> "Calibration":
+                    heat_val: int, range_sw_err: int) -> Calibration:
         # blk1: registers 0x8A-0xA0 (23 bytes)
         # blk2: registers 0xE1-0xEE (14 bytes)
         par_t2 = _s16(blk1[0x8A - REG_CAL_1_START], blk1[0x8B - REG_CAL_1_START])
