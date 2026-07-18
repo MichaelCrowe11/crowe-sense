@@ -28,6 +28,7 @@ dev = [
 ]
 
 [project.scripts]
+crowe           = "crowe.cli:main"
 crowe-sampler   = "crowe.sampler:main"
 crowe-uploader  = "crowe.uploader:main"
 crowe-watchdog  = "crowe.watchdog:main"

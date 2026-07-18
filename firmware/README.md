@@ -24,7 +24,8 @@ firmware/
 │   ├── uploader.py      SQLite → gzip → ed25519 sign → S3 PUT
 │   ├── watchdog.py      LEDs, hotspot reset, /run/crowe/status.json
 │   ├── health.py        Hourly snapshot to fleet receiver
-│   └── provision.py     First-boot setup CLI
+│   ├── provision.py     First-boot setup CLI
+│   └── cli.py           `crowe` operator CLI (read-only status/read)
 ├── systemd/             4 unit files + 1 timer
 ├── config/node.toml.example
 ├── tests/               pytest suite, no hardware required
@@ -54,6 +55,26 @@ systemctl enable --now crowe-sampler crowe-uploader crowe-watchdog crowe-health.
 
 The sampler will refuse to start if `/etc/crowe/node.toml` is missing
 (via the systemd `ConditionPathExists`).
+
+## Operator CLI
+
+Once a node is provisioned, `crowe` is the single read-only command for
+checking on it in the field. It never touches the I2C bus, so it is safe
+to run alongside the live sampler.
+
+```bash
+crowe status              # node health at a glance (add --json for a snapshot)
+crowe read --last 20      # 20 most recent samples, newest first
+crowe read --sensor scd41 # ...for one sensor
+crowe storage             # is the 1 TB drive mounted, how full?
+crowe uplink              # cellular or site Wi-Fi right now?
+crowe queue               # how many samples are waiting to ship?
+```
+
+Every subcommand takes `--json` for scripting. Exit codes are meaningful:
+`status`/`storage`/`uplink` return non-zero when the node is unhealthy
+(drive unmounted, no uplink), so they drop straight into shell checks and
+monitoring probes.
 
 ## Run the tests
 
