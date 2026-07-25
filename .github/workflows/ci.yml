@@ -5,10 +5,15 @@ on:
   push:
     branches: [main]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   firmware:
     name: Firmware — lint + tests
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: firmware
@@ -34,6 +39,7 @@ jobs:
   enclosure:
     name: Enclosure — OpenSCAD render
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: hardware/enclosure
