@@ -76,10 +76,20 @@ def bands_for(env: dict, metric: str, stage: str, species: str | None) -> list[d
     return out
 
 
-def _median(xs: list[float]) -> float:
+def _median(xs: list[float], side: str = "low") -> float:
+    """Median, but never interpolated: every number this tool prints is supposed
+    to be one the grower actually said, and averaging an even-length list
+    invents one. Six fruiting-humidity statements straddling 80 and 82 produced
+    a floor of "at least 81.0" cited to three videos, none of which says 81.
+
+    On a tie the more forgiving of the two middles wins, the lower for a floor
+    and the upper for a ceiling, so a straddle widens the band rather than
+    manufacturing breaches out of a rounding choice."""
     xs = sorted(xs)
     n = len(xs)
-    return xs[n // 2] if n % 2 else (xs[n // 2 - 1] + xs[n // 2]) / 2.0
+    if n % 2:
+        return xs[n // 2]
+    return xs[n // 2 - 1] if side == "low" else xs[n // 2]
 
 
 def consensus(bands: list[dict]) -> dict | None:
@@ -124,8 +134,8 @@ def consensus(bands: list[dict]) -> dict | None:
 
     low_from = ranges + lowers + points
     high_from = ranges + uppers
-    low = _median([b["low"] for b in low_from]) if low_from else None
-    high = _median([b["high"] for b in high_from]) if high_from else None
+    low = _median([b["low"] for b in low_from], "low") if low_from else None
+    high = _median([b["high"] for b in high_from], "high") if high_from else None
     n_low = len({s for b in low_from for s in b["sources"]})
     n_high = len({s for b in high_from for s in b["sources"]})
 
@@ -139,7 +149,7 @@ def consensus(bands: list[dict]) -> dict | None:
             low, n_low = None, 0
 
     return {"low": low, "high": high, "n_low": n_low, "n_high": n_high,
-            "target": _median([b["low"] for b in points]) if points else None,
+            "target": _median([b["low"] for b in points], "low") if points else None,
             "n_points": len({s for b in points for s in b["sources"]})}
 
 
