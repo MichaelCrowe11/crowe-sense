@@ -190,6 +190,47 @@ check("its duration is right", round((runs[0]["end"] - runs[0]["start"]) / 3600.
 s2 = sc.read_series(str(db), "temperature_c", "no-such-zone", t0 - 1, t0 + 90000)
 check("zone filter excludes other zones", s2, [])
 
+# --------------------------------------------------------------------- vpd
+
+print("vpd")
+
+import vpd as V  # noqa: E402
+
+# Checked against the rig's own vpd_kpa over all 469 published hours: mean
+# error -0.0001 kPa, worst 0.0007. These two are spot values from that run.
+check("vpd at 18.0C / 91.9%", round(V.vpd_kpa(18.0, 91.9), 2), 0.17)
+check("vpd at 24.0C / 78.1%", round(V.vpd_kpa(24.0, 78.1), 2), 0.65)
+check("rh_for_vpd inverts vpd_kpa",
+      round(V.rh_for_vpd(21.0, V.vpd_kpa(21.0, 85.0)), 6), 85.0)
+
+# The corners: VPD rises with temperature and falls with humidity, so the band
+# runs from coolest-and-wettest to hottest-and-driest.
+lo, hi = V.derive(19.44, 20.0, 80.0, 86.0)
+check("derived band low corner is cool and wet", lo, round(V.vpd_kpa(19.44, 86.0), 3))
+check("derived band high corner is hot and dry", hi, round(V.vpd_kpa(20.0, 80.0), 3))
+check("derived band is ordered", lo < hi, True)
+
+# A VPD band needs BOTH parents. Half of one is not a band.
+check("no temperature means no derived band",
+      V.derive(None, None, 80.0, 86.0), None)
+check("no humidity means no derived band",
+      V.derive(19.44, 20.0, None, None), None)
+
+# The laundering guard. sense_check refuses a temperature band resting on one
+# video; it must not return wearing VPD units.
+one_source = {"low": 19.44, "high": 20.0, "n_low": 1, "n_high": 1}
+six_source = {"low": 80.0, "high": 86.0, "n_low": 6, "n_high": 6}
+check("a one-video band is not grounded", sc._grounded(one_source), (None, None))
+check("a six-video band is grounded", sc._grounded(six_source), (80.0, 86.0))
+check("a rejected parent cannot be derived from",
+      V.derive(*sc._grounded(one_source), *sc._grounded(six_source)), None)
+
+# A fixed humidity floor is a moving VPD target, and by how much is the point.
+lo, hi = V.implied_ceiling(80.0, [18.0, 24.0])
+check("80% floor at 18C permits", round(lo, 2), 0.41)
+check("80% floor at 24C permits", round(hi, 2), 0.60)
+check("so the same rule drifts by nearly half", round(hi / lo, 2), 1.45)
+
 # ---------------------------------------------------------------- stage log
 
 print("stage log")

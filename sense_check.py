@@ -35,6 +35,7 @@ import sys
 from pathlib import Path
 
 import stagelog
+from vpd import derive, implied_ceiling, vpd_kpa
 
 DEFAULT_DB = os.path.expanduser("~/.crowe-logic/sense.db")
 DEFAULT_ENVELOPE = os.path.expanduser("~/crowe-gamedev/practice-envelope.json")
@@ -399,7 +400,89 @@ def judge(env: dict, db: str, stage: str, species: str | None, zone: str | None,
                 print(f"  THRESHOLD: {pct:.0f}% of readings above {b['high']:.1f} "
                       f"({b['context']}) [{b['sources'][0] if b['sources'] else 'n/a'}]")
         print()
+    any_finding |= judge_vpd(env, db, stage, species, zone, start, end)
     return any_finding
+
+
+def _grounded(con: dict | None, min_sources: int = 2) -> tuple:
+    """A band's sides, with any side that rests on too few videos removed."""
+    if not con:
+        return None, None
+    low = con["low"] if (con["low"] is not None and con["n_low"] >= min_sources) else None
+    high = con["high"] if (con["high"] is not None and con["n_high"] >= min_sources) else None
+    return low, high
+
+
+def judge_vpd(env: dict, db: str, stage: str, species: str | None,
+              zone: str | None, start: float, end: float) -> bool:
+    """VPD, computed from the grower's own temperature and humidity statements.
+
+    Nothing in the corpus states a VPD target, so this is derived rather than
+    quoted, and it is labelled that way everywhere it appears. The derivation
+    is only as good as its parents: if the temperature band was refused for
+    resting on one video, it does not come back in wearing different units."""
+    series = read_series(db, "vpd_kpa", zone, start, end)
+    if not series:
+        return False
+    vals = [v for _, v in series]
+    print(f"vpd_kpa: {len(series)} readings, min {min(vals):.2f} "
+          f"mean {sum(vals)/len(vals):.2f} max {max(vals):.2f}")
+    print("  DERIVED, not documented: you state no VPD target anywhere in the "
+          "corpus.")
+
+    t_con = consensus(bands_for(env, "temperature_c", stage, species))
+    h_con = consensus(bands_for(env, "humidity_pct", stage, species))
+    t_low, t_high = _grounded(t_con)
+    h_low, h_high = _grounded(h_con)
+
+    band = derive(t_low, t_high, h_low, h_high)
+    if band and band[0] is not None and band[1] is not None:
+        cites = sorted({s for m in ("temperature_c", "humidity_pct")
+                        for b in bands_for(env, m, stage, species)
+                        for s in b["sources"]})[:4]
+        print(f"  implied band {band[0]:.2f} to {band[1]:.2f} kPa, from your "
+              f"{t_low:.1f}-{t_high:.1f}C and {h_low:.0f}-{h_high:.0f}% "
+              f"[{', '.join(cites)}]")
+        runs = breaches(series, band[0], band[1])
+        if runs:
+            total_h = sum(r["end"] - r["start"] for r in runs) / 3600.0
+            print(f"  OUTSIDE for {total_h:.1f}h across "
+                  f"{len(runs)} sustained period(s):")
+            for r in runs[:4]:
+                hrs = (r["end"] - r["start"]) / 3600.0
+                print(f"    {fmt(r['start'])} to {fmt(r['end'])}  {hrs:.1f}h  "
+                      f"{r['dir']} band, worst {r['worst']:.2f}")
+            print()
+            return True
+        print("  inside the band your own temperature and humidity imply.\n")
+        return False
+
+    # No derivable band. The humidity floor alone still says something precise
+    # once it meets the temperatures the room actually ran at, and that number
+    # is the one worth stating on camera.
+    missing = "temperature" if (t_low is None or t_high is None) else "humidity"
+    print(f"  not derivable: your {missing} band for {stage} is not grounded "
+          f"in enough videos to build one from.")
+    if h_low is not None:
+        # Paired by timestamp, not by position. In the raw export temperature
+        # has 4813 samples and VPD has 4849, so zipping the two lists would
+        # quietly compare a reading against a different moment's temperature.
+        by_epoch = dict(read_series(db, "temperature_c", zone, start, end))
+        pairs = [(by_epoch[e], v) for e, v in series if e in by_epoch]
+        temps = [t for t, _ in pairs]
+        if temps:
+            lo, hi = implied_ceiling(h_low, temps)
+            over = sum(1 for t, v in pairs if v > vpd_kpa(t, h_low))
+            vals = [v for _, v in pairs]
+            print(f"  but your {h_low:.0f}% floor, at the {min(temps):.1f} to "
+                  f"{max(temps):.1f}C these rooms actually ran, demands VPD "
+                  f"below {lo:.2f}-{hi:.2f} kPa.")
+            print(f"  A fixed humidity floor is a MOVING VPD target: same rule, "
+                  f"{(hi/lo - 1) * 100:.0f}% apart across that range.")
+            print(f"  {100.0 * over / len(vals):.0f}% of readings sit above the "
+                  f"VPD their own temperature allows.")
+    print()
+    return False
 
 
 def main():
