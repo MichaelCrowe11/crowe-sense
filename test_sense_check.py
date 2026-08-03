@@ -164,6 +164,70 @@ check("its duration is right", round((runs[0]["end"] - runs[0]["start"]) / 3600.
 s2 = sc.read_series(str(db), "temperature_c", "no-such-zone", t0 - 1, t0 + 90000)
 check("zone filter excludes other zones", s2, [])
 
+# ---------------------------------------------------------------- stage log
+
+print("stage log")
+
+import stagelog  # noqa: E402
+
+T = stagelog.parse_ts
+check("date-only timestamps parse", T("2026-06-11") > 0, True)
+check("full timestamps parse",
+      T("2026-06-11T12:00:00Z") - T("2026-06-11") , 43200.0)
+
+log = [
+    {"zone": "tent-1", "stage": "pin_set", "species": "shiitake",
+     "batch_id": "B12", "start": T("2026-06-11T00:00:00Z")},
+    {"zone": "tent-1", "stage": "fruiting", "species": None,
+     "batch_id": "B12", "start": T("2026-06-12T00:00:00Z")},
+    {"zone": "tent-2", "stage": "idle", "species": None,
+     "batch_id": None, "start": T("2026-06-11T00:00:00Z")},
+]
+
+# A window spanning a transition must be judged against BOTH bands. This is the
+# whole point: the same readings are 3.6h out against fruiting and 15.8h out
+# against pin set.
+segs = stagelog.segments(log, "tent-1", T("2026-06-11T00:00:00Z"),
+                         T("2026-06-13T00:00:00Z"))
+check("a transition splits the window", [s["stage"] for s in segs],
+      ["pin_set", "fruiting"])
+check("the split lands on the transition",
+      segs[0]["end"], T("2026-06-12T00:00:00Z"))
+check("species rides along with the span", segs[0]["species"], "shiitake")
+
+# Time before the log begins is unknown, NOT the earliest known stage.
+segs = stagelog.segments(log, "tent-1", T("2026-06-10T00:00:00Z"),
+                         T("2026-06-11T12:00:00Z"))
+check("time before the first entry is unknown",
+      [s["stage"] for s in segs], [None, "pin_set"])
+
+# A zone with no entries at all is entirely unknown, never defaulted.
+segs = stagelog.segments(log, "tent-9", T("2026-06-11T00:00:00Z"),
+                         T("2026-06-12T00:00:00Z"))
+check("an unlogged zone is one unknown span",
+      [s["stage"] for s in segs], [None])
+
+# idle must survive to the caller so an empty tent is skipped, not judged.
+segs = stagelog.segments(log, "tent-2", T("2026-06-11T00:00:00Z"),
+                         T("2026-06-12T00:00:00Z"))
+check("idle is preserved", [s["stage"] for s in segs], ["idle"])
+
+# Backdated entries are the normal case, so order in the file must not matter.
+shuffled = [log[1], log[2], log[0]]
+segs = stagelog.segments(sorted(shuffled, key=lambda e: e["start"]), "tent-1",
+                         T("2026-06-11T00:00:00Z"), T("2026-06-13T00:00:00Z"))
+check("out-of-order entries still segment correctly",
+      [s["stage"] for s in segs], ["pin_set", "fruiting"])
+
+check("current stage is the latest entry",
+      stagelog.current(log, "tent-1")["stage"], "fruiting")
+
+# A span outside the window entirely must not be emitted.
+segs = stagelog.segments(log, "tent-1", T("2026-06-12T06:00:00Z"),
+                         T("2026-06-12T12:00:00Z"))
+check("only overlapping spans are returned",
+      [s["stage"] for s in segs], ["fruiting"])
+
 print()
 if FAILURES:
     print(f"{len(FAILURES)} FAILED: {', '.join(FAILURES)}")

@@ -34,6 +34,8 @@ import sqlite3
 import sys
 from pathlib import Path
 
+import stagelog
+
 DEFAULT_DB = os.path.expanduser("~/.crowe-logic/sense.db")
 DEFAULT_ENVELOPE = os.path.expanduser("~/crowe-gamedev/practice-envelope.json")
 METRICS = ("temperature_c", "humidity_pct", "co2_ppm")
@@ -230,41 +232,45 @@ def fmt(epoch: float) -> str:
     return dt.datetime.fromtimestamp(epoch).strftime("%Y-%m-%d %H:%M")
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--db", default=DEFAULT_DB)
-    ap.add_argument("--envelope", default=DEFAULT_ENVELOPE)
-    ap.add_argument("--stage", default="incubation")
-    ap.add_argument("--species", default=None)
-    ap.add_argument("--zone", default=None)
-    ap.add_argument("--hours", type=float, default=72.0)
-    ap.add_argument("--since", default=None, help="YYYY-MM-DD, for a post-mortem")
-    a = ap.parse_args()
+def data_extent(db: str, zone: str | None,
+                start: float, end: float) -> tuple[float, float, int] | None:
+    """When the readings inside a span actually begin and end.
 
-    env = load_envelope(a.envelope)
-    end = dt.datetime.now().timestamp()
-    start = (dt.datetime.strptime(a.since, "%Y-%m-%d").timestamp()
-             if a.since else end - a.hours * 3600.0)
+    An open stage entry runs to now, so a log saying "fruiting since June 11"
+    produced a 1252.5h span against 24h of readings. The span is what the log
+    claims and is not wrong, but printing it alone invites reading a one-day
+    excursion as a fifty-day one."""
+    con = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+    cols = {r[1] for r in con.execute("PRAGMA table_info(readings)")}
+    q = ("SELECT MIN(epoch), MAX(epoch), COUNT(*) FROM readings "
+         "WHERE metric IN (%s) AND epoch BETWEEN ? AND ?" % ",".join("?" * len(METRICS)))
+    args: list = [*METRICS, start, end]
+    if zone and "sensor" in cols:
+        q += " AND sensor=?"
+        args.append(zone)
+    lo, hi, n = con.execute(q, args).fetchone()
+    con.close()
+    return (lo, hi, n) if n else None
 
-    print(f"CROWE SENSE against documented practice")
-    print(f"  stage {a.stage}" + (f", species {a.species}" if a.species else "")
-          + (f", zone {a.zone}" if a.zone else "") )
-    print(f"  window {fmt(start)} to {fmt(end)}\n")
 
+def judge(env: dict, db: str, stage: str, species: str | None, zone: str | None,
+          start: float, end: float) -> bool:
+    """Report every metric for one zone over one span of constant stage.
+    Returns whether anything was found."""
     any_finding = False
     for metric in METRICS:
-        bands = bands_for(env, metric, a.stage, a.species)
+        bands = bands_for(env, metric, stage, species)
         if not bands:
             near = [b for b in env["bands"] if b["metric"] == metric
-                    and b["stage"] != a.stage]
+                    and b["stage"] != stage]
             note = ""
             if near:
                 stages = sorted({b["stage"] for b in near})
                 note = (f" You document it for {', '.join(stages)}, "
                         f"which is a different claim and is not borrowed.")
-            print(f"{metric}: nothing documented for {a.stage}. Not judged.{note}\n")
+            print(f"{metric}: nothing documented for {stage}. Not judged.{note}\n")
             continue
-        series = read_series(a.db, metric, a.zone, start, end)
+        series = read_series(db, metric, zone, start, end)
         if not series:
             print(f"{metric}: no readings in this window.\n")
             continue
@@ -353,8 +359,90 @@ def main():
                 print(f"  THRESHOLD: {pct:.0f}% of readings above {b['high']:.1f} "
                       f"({b['context']}) [{b['sources'][0] if b['sources'] else 'n/a'}]")
         print()
+    return any_finding
 
-    if not any_finding:
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--db", default=DEFAULT_DB)
+    ap.add_argument("--envelope", default=DEFAULT_ENVELOPE)
+    ap.add_argument("--stage", default=None,
+                    help="override the stage log; without it the log decides")
+    ap.add_argument("--species", default=None)
+    ap.add_argument("--zone", default=None)
+    ap.add_argument("--hours", type=float, default=72.0)
+    ap.add_argument("--since", default=None, help="YYYY-MM-DD, for a post-mortem")
+    ap.add_argument("--stages", default=stagelog.DEFAULT_LOG)
+    a = ap.parse_args()
+
+    env = load_envelope(a.envelope)
+    end = dt.datetime.now().timestamp()
+    start = (dt.datetime.strptime(a.since, "%Y-%m-%d").timestamp()
+             if a.since else end - a.hours * 3600.0)
+
+    print("CROWE SENSE against documented practice")
+    print(f"  window {fmt(start)} to {fmt(end)}"
+          + (f", zone {a.zone}" if a.zone else ""))
+
+    # The stage used to be whatever was typed, and the same readings are 3.6h
+    # out against the fruiting floor or 15.8h out against the pin-set band. So
+    # the log decides unless explicitly overridden, and a span the log does not
+    # cover is reported as unknown rather than defaulted.
+    if a.stage:
+        print(f"  stage {a.stage} (given on the command line, not from the log)"
+              + (f", species {a.species}" if a.species else ""))
+        print()
+        found = judge(env, a.db, a.stage, a.species, a.zone, start, end)
+    elif not a.zone:
+        sys.exit("pass --zone so the stage log can be read, or --stage to override it.")
+    else:
+        entries = stagelog.load(a.stages)
+        if not entries:
+            sys.exit(
+                f"no stage log at {a.stages}, and no --stage given.\n"
+                "  Which stage a zone was running changes the answer several-fold,\n"
+                "  so it is not guessed. Record it with:\n"
+                f"    python3 log_stage.py --zone {a.zone} --stage fruiting\n"
+                "  or override for one run with --stage=fruiting.")
+        spans = stagelog.segments(entries, a.zone, start, end)
+        known = [s for s in spans if s["stage"] and s["stage"] != "idle"]
+        print(f"  stage from {a.stages}: "
+              f"{len(spans)} span(s), {len(known)} judgeable")
+        print()
+        if not known:
+            for s in spans:
+                hrs = (s["end"] - s["start"]) / 3600.0
+                what = "zone idle" if s["stage"] == "idle" else "stage UNKNOWN"
+                print(f"[{fmt(s['start'])} to {fmt(s['end'])}, {hrs:.1f}h] "
+                      f"{what}, not judged.")
+            # "No findings" would read as an all-clear on a window that was
+            # never examined.
+            sys.exit("\nNothing was judged. No span in this window has a stage "
+                     "to judge it against.")
+        found = False
+        for s in spans:
+            hrs = (s["end"] - s["start"]) / 3600.0
+            head = f"[{fmt(s['start'])} to {fmt(s['end'])}, {hrs:.1f}h]"
+            if not s["stage"]:
+                print(f"{head} stage UNKNOWN, not judged. The log has no entry "
+                      f"covering this span.\n")
+                continue
+            if s["stage"] == "idle":
+                print(f"{head} zone idle, not judged.\n")
+                continue
+            label = s["stage"] + (f", {s['species']}" if s["species"] else "")
+            if s["batch_id"]:
+                label += f", batch {s['batch_id']}"
+            ext = data_extent(a.db, a.zone, s["start"], s["end"])
+            if ext and (ext[1] - ext[0]) < (s["end"] - s["start"]) * 0.9:
+                head = (f"[{fmt(ext[0])} to {fmt(ext[1])}, "
+                        f"{(ext[1] - ext[0]) / 3600.0:.1f}h of readings "
+                        f"inside a {hrs:.1f}h span]")
+            print(f"{head} {label}")
+            found |= judge(env, a.db, s["stage"], a.species or s["species"],
+                           a.zone, s["start"], s["end"])
+
+    if not found:
         print("No findings. Conditions matched your documented practice.")
     print("\nConditions only. Contamination outcomes are NOT predicted: the corpus\n"
           "grounds conditions richly and contamination dynamics barely, so this\n"
