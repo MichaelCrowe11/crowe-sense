@@ -136,6 +136,32 @@ gappy = [(0.0, 70.0), (86400.0, 70.0)]
 h, _ = sc.total_outside(gappy, 80.0, None)
 check("a 24h sensor gap is not counted as 24h outside", h, 0.0)
 
+# The real case: the published archive is hourly and contains an 82-hour
+# outage. Charging that to the band the room was last outside would invent
+# three days of breach out of a dead Pi.
+hourly = [(i * 3600.0, 70.0) for i in range(24)]
+hourly += [(hourly[-1][0] + 82 * 3600.0 + i * 3600.0, 70.0) for i in range(24)]
+h, pct = sc.total_outside(hourly, 80.0, None)
+check("an 82h outage inside an hourly series is excluded", round(h), 46)
+check("readings either side of the outage still count", round(pct), 100)
+
+# ------------------------------------------------------------------ cadence
+
+print("cadence")
+
+check("cadence of an hourly series", sc.cadence(hourly), 3600.0)
+check("cadence of a 9-second series", sc.cadence(series([1.0] * 10, step=9.0)), 9.0)
+
+# A lone out-of-band hour must count for an hour, not for nothing. Measuring a
+# run as last-minus-first sample made single-sample excursions zero-length, so
+# hourly data silently lost every excursion under two consecutive hours.
+one_hour = [(i * 3600.0, 85.0) for i in range(5)]
+one_hour[2] = (2 * 3600.0, 70.0)
+runs = sc.breaches(one_hour, 80.0, None)
+check("a single out-of-band hour is a real period", len(runs), 1)
+check("and it lasts an hour",
+      (runs[0]["end"] - runs[0]["start"]) / 3600.0 if runs else None, 1.0)
+
 # ------------------------------------------------------- end to end on sqlite
 
 print("end to end")

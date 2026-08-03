@@ -172,6 +172,20 @@ def read_series(db: str, metric: str, zone: str | None,
     return rows
 
 
+def cadence(series: list[tuple[float, float]]) -> float:
+    """Typical seconds between readings.
+
+    The Pi samples about every 9 seconds, but the published aggregate is hourly
+    means, and the same code has to be honest on both. With a fixed assumption
+    an hourly series loses every excursion shorter than two consecutive hours,
+    because a run's length was measured as last-sample minus first-sample and a
+    lone out-of-band hour spans zero seconds."""
+    if len(series) < 2:
+        return 0.0
+    gaps = sorted(series[i][0] - series[i - 1][0] for i in range(1, len(series)))
+    return gaps[len(gaps) // 2]
+
+
 def tolerance(low: float | None, high: float | None) -> float:
     """Slack, because the bands come from Fahrenheit converted to Celsius and
     70F is 21.11C. Readings sitting at 21.10 were being reported as below band:
@@ -192,6 +206,7 @@ def breaches(series: list[tuple[float, float]], low: float | None, high: float |
     # a breach of one hundredth of a degree, which is unit-conversion precision
     # rather than anything a grower did.
     tol = tolerance(low, high)
+    step = cadence(series)
     out, run = [], None
     for epoch, value in series:
         outside = ((low is not None and value < low - tol)
@@ -209,11 +224,17 @@ def breaches(series: list[tuple[float, float]], low: float | None, high: float |
             run = None
     if run is not None:
         out.append(run)
+    # A reading stands for the interval it was taken in, so a run covers one
+    # cadence beyond its last sample. On raw data this adds 9 seconds and
+    # changes nothing; on hourly means it is the difference between a one-hour
+    # excursion counting for an hour and counting for nothing.
+    for r in out:
+        r["end"] += step
     return [r for r in out if (r["end"] - r["start"]) / 60.0 >= min_minutes]
 
 
 def total_outside(series: list[tuple[float, float]], low: float | None,
-                  high: float | None, max_gap: float = 300.0) -> tuple[float, float]:
+                  high: float | None, max_gap: float | None = None) -> tuple[float, float]:
     """Every moment outside the band, including excursions too short to be
     reported as periods. Returns (hours, percent of readings).
 
@@ -223,9 +244,18 @@ def total_outside(series: list[tuple[float, float]], low: float | None,
     floor sat in dips shorter than 20 minutes each. Reporting only the sustained
     periods called that 2.6h, which understates what the room actually did.
     Gaps longer than max_gap are not counted, since the sensor being offline is
-    not the same as the room being out of band."""
+    not the same as the room being out of band. The published archive contains
+    an 82-hour outage; charging that to whichever band the room was last outside
+    would invent three days of breach out of a dead Pi. max_gap defaults to
+    three times the observed cadence so the rule holds at any resolution."""
     if not series:
         return 0.0, 0.0
+    if max_gap is None:
+        # A gap is an outage when it dwarfs the TYPICAL spacing, and a handful
+        # of points has no typical spacing: on two samples a day apart the
+        # cadence is one day, so the outage becomes the norm and a dead sensor
+        # reads as a day out of band.
+        max_gap = max(300.0, cadence(series) * 3.0) if len(series) >= 4 else 300.0
     def out(v: float) -> bool:
         return (low is not None and v < low) or (high is not None and v > high)
     secs = 0.0
