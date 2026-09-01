@@ -1,0 +1,8 @@
+#!/bin/sh
+# Fullscreen kiosk of the node's own dashboard (crowe-api.service on :8078).
+# --password-store=basic is REQUIRED on a Pi that auto-logs-in: without it Chromium
+# pops an "unlock keyring" dialog over the dashboard on every boot.
+URL="http://127.0.0.1:8078/"
+for i in $(seq 1 30); do curl -sf "$URL/health" >/dev/null 2>&1 && break; sleep 2; done
+exec chromium-browser --kiosk --app="$URL" --password-store=basic --noerrdialogs \
+  --disable-session-crashed-bubble --overscroll-history-navigation=0 --check-for-update-interval=31536000

@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Crowe Sense
+GenericName=Cultivation Telemetry
+Comment=Live tent, flow hood and Pi telemetry dashboard
+Exec=/home/sergikdropz/.local/bin/crowe-sense-launcher.sh
+Icon=/home/sergikdropz/.local/share/icons/crowe-sense.svg
+Terminal=false
+Categories=Utility;Monitor;System;
+Keywords=crowe;sense;telemetry;sensors;mushroom;cultivation;
+StartupNotify=true

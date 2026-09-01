@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Crowe Sense
+Comment=Fullscreen room telemetry from this node
+Exec=/usr/local/bin/crowe-sense-kiosk
+Icon=crowe-sense
+Terminal=false
+X-GNOME-Autostart-enabled=true

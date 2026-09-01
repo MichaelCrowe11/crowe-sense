@@ -1,0 +1,38 @@
+--- src/index.js.bak-pre-sense	2026-08-31 23:58:39
++++ src/index.js	2026-08-31 23:58:39
+@@ -225,6 +225,25 @@
+         resp.headers.set("x-crowe-edge", "crowelogic.com");
+         return resp;
+       }
++      // Crowe Sense: /app/sense/* -> the relay, with the user's own Crowe ID token, so the
++      // web bundle reads the same contract the desktop and Cortex read (paired nodes only).
++      // Free tiers may read their own nodes; the relay enforces ownership, not the plan.
++      if (p.startsWith("/app/sense/")) {
++        const live = await freshSession(session, env);
++        if (!live) return json(401, { error: "Crowe ID session expired; sign in again", sign_in: "/oauth2/start" });
++        const relay = (env.SENSE_RELAY || "https://sense.crowelogic.com").replace(/\/$/, "");
++        const target = `${relay}${p.slice("/app/sense".length)}${url.search}`;
++        const headers = new Headers(req.headers);
++        for (const h of HOP) headers.delete(h);
++        headers.set("authorization", `Bearer ${live.access_token}`);
++        headers.set("x-crowe-user", live.email);
++        const up = await fetch(target, { method: req.method, headers, body: req.method === "GET" || req.method === "HEAD" ? undefined : req.body, redirect: "manual" });
++        const resp = new Response(up.body, up);
++        resp.headers.delete("content-length");
++        resp.headers.set("cache-control", "no-store");
++        resp.headers.set("x-crowe-edge", "crowelogic.com");
++        return resp;
++      }
+       // A BARE 404 on purpose: web-bridge.js only falls back to the gateway when
+       // the owui 404 has no content-type (a JSON 404 reads as "OWUI is open,
+       // model unknown" and surfaces the error in the transcript).
+--- wrangler.jsonc.bak-pre-sense	2026-08-31 23:58:39
++++ wrangler.jsonc	2026-08-31 23:58:39
+@@ -18,6 +18,7 @@
+     "ISSUER": "https://id.crowelogic.com/realms/crowe",
+     "CLIENT_ID": "crowe-logic-web",
+     "GATEWAY": "https://models.crowelogic.com",
++    "SENSE_RELAY": "https://sense.crowelogic.com",
+     "PAID_TIERS": "personal,pro,team,max,scale,studio,business,enterprise,byok"
+   }
+ }

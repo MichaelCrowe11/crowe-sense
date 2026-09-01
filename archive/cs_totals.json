@@ -1,0 +1,39 @@
+{
+  "readings": 3596420,
+  "epoch_min": 1779639002.1790676,
+  "epoch_max": 1781639693.551055,
+  "span_days": 23.16,
+  "iso_start": "2026-05-24T16:10:02Z",
+  "iso_end": "2026-06-16T19:54:53Z",
+  "n_metrics": 20,
+  "metrics": [
+    "arm_clock_mhz",
+    "co2_ppm",
+    "co2_trend_ppm_min",
+    "core_volts",
+    "dew_point_c",
+    "fruiting_score",
+    "hood_face_velocity_fpm",
+    "hood_laminar_ok",
+    "humidity_pct",
+    "light_lux",
+    "prefilter_days_left",
+    "prefilter_dp_pa",
+    "prefilter_load_pct",
+    "soc_temp_c",
+    "temperature_c",
+    "throttled_ever",
+    "throttled_now",
+    "undervoltage_ever",
+    "undervoltage_now",
+    "vpd_kpa"
+  ],
+  "sensors": [
+    "hood-1",
+    "hood-1-derived",
+    "pi",
+    "tent-1",
+    "tent-1-derived",
+    "tent-2"
+  ]
+}
