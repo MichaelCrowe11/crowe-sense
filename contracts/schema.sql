@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS nodes (
   zone         TEXT NOT NULL,
   label        TEXT NOT NULL DEFAULT '',
   created_ts   REAL NOT NULL,
-  last_seen_ts REAL
+  last_seen_ts REAL,
+  readings_count INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_nodes_owner ON nodes(owner_email);
 

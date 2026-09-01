@@ -1,0 +1,22 @@
+# Crowe Sense node configuration
+# Provisioned: do not edit by hand.
+
+node_id = "cs-635a79"
+site = "harrison-lake-forest"
+zone = "fruiting-1"
+storage_mount = "/var/lib/crowe"
+manifest_url = ""
+private_key_path = "/Users/crowelogic/crowe-sense/kits/harrison-lf-01/etc-crowe/node.key"
+
+[relay]
+url = "https://sense.crowelogic.com"
+
+[api]
+port = 8078
+
+[sensors]
+enabled = ["scd41", "sht45", "bme688", "veml7700", "pi"]
+
+[sampler.periods]
+# Override per-sensor cadences (seconds) here, e.g.:
+# scd41 = 10.0

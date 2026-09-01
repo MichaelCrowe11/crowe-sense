@@ -1,0 +1,3 @@
+# node private keys and assembled kits never enter git
+kits/*/etc-crowe/node.key
+kits/*-kit.zip

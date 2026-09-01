@@ -10,8 +10,8 @@
   //   env -u CLOUDFLARE_API_TOKEN npx wrangler d1 execute crowe-sense --remote --file=../contracts/schema.sql
   //   env -u CLOUDFLARE_API_TOKEN npx wrangler r2 bucket create crowe-sense-raw   # STANDARD class
   //   env -u CLOUDFLARE_API_TOKEN npx wrangler deploy
-  "routes": [{ "pattern": "sense.crowelogic.com/*", "zone_name": "crowelogic.com" }],
-  "d1_databases": [{ "binding": "DB", "database_name": "crowe-sense", "database_id": "REPLACE_WITH_D1_ID" }],
+  "routes": [{ "pattern": "sense.crowelogic.com", "custom_domain": true }],
+  "d1_databases": [{ "binding": "DB", "database_name": "crowe-sense", "database_id": "0c879058-5255-41ca-bc17-4d70a6e4f028" }],
   "r2_buckets": [{ "binding": "RAW", "bucket_name": "crowe-sense-raw" }],
   "observability": { "enabled": true },
   "vars": {
