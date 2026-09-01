@@ -66,7 +66,9 @@ def build(film, manifest, shots):
     for i, sc in enumerate(scenes):
         h = sha(sc["voice"]); vdur = manifest[h]["dur"]; L = round(vdur + PAD + (XF if i else 0), 2)
         sid = sc["id"]; is_shared = sid not in ("title", "open", "close")
-        base = os.path.join(shared if is_shared else d, f"{sid if is_shared else slug + '-' + sid}")
+        # shared clips are keyed by scene AND narration, so the investor ask and the program ask
+        # (same scene id, different voice and therefore different length) never collide
+        base = os.path.join(shared if is_shared else d, f"{sid}-{h[:6]}" if is_shared else f"{slug}-{sid}")
         if sid in ("title", "close"):
             clip = card_clip(sc, target, L, base + ".mp4")
         else:
