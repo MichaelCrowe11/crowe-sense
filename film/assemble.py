@@ -3,7 +3,10 @@ import json, os, subprocess, sys, hashlib
 HERE = os.path.dirname(os.path.abspath(__file__)); OUT = os.path.join(HERE, "out"); VOICE = os.path.join(OUT, "voice")
 sys.path.insert(0, HERE)
 import cards
-MUSIC = os.path.expanduser("~/substrate-film/OneFloorBelowTheDawn_v14.mp3")
+# The bed: the Talon score written for these films when it rendered, else the Substrate album track.
+_SCORE = os.path.join(HERE, "assets", "score", "crowe-sense.wav")
+MUSIC = _SCORE if os.path.exists(_SCORE) else os.path.expanduser("~/substrate-film/OneFloorBelowTheDawn_v14.mp3")
+MUSIC_SS = "0" if MUSIC == _SCORE else "40"
 PAD, XF = 0.8, 0.6
 def sha(t): return hashlib.sha1(t.encode()).hexdigest()[:16]
 def run(cmd): subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
@@ -44,7 +47,7 @@ def build(film, manifest, quality="1080"):
     run(acmd + ["-filter_complex", af, "-map", "[vo]", "-t", f"{total:.2f}", "-c:a", "pcm_s16le", narration])
     # mix: bed at -21 dB under the voice, 2 s in, 3 s out
     master = os.path.join(d, f"{slug}.mp4")
-    run(["ffmpeg", "-y", "-i", silent, "-i", narration, "-ss", "40", "-i", MUSIC, "-filter_complex",
+    run(["ffmpeg", "-y", "-i", silent, "-i", narration, "-ss", MUSIC_SS, "-i", MUSIC, "-filter_complex",
          f"[2:a]atrim=0:{total:.2f},asetpts=PTS-STARTPTS,volume=-21dB,afade=t=in:d=2,afade=t=out:st={max(0,total-3):.2f}:d=3[bed];[1:a][bed]amix=inputs=2:normalize=0[a]",
          "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", "-shortest", master])
     web = os.path.join(d, f"{slug}-720p.mp4")

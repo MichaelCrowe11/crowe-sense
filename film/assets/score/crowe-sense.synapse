@@ -1,0 +1,87 @@
+// Crowe Sense: score for the Crowe Sense films (one per target, YouTube, Harrison).
+// D major, 76 BPM, ~180s. 57 bars at 3.16s/bar, sectioned to the film's beats:
+// title (0-13s), the node (13-38), one contract (38-57), the room live (57-76),
+// judged against practice (76-95), built and tested (95-114), not proven (114-130),
+// who is building it (130-146), the ask (146-162), close (162-180).
+// Quiet, editorial, a bed under a spoken voice: sparse most of the way, one lift at "built and tested",
+// a deliberate hush at "not proven", warmth for the founder, resolve to close.
+
+composition "Crowe Sense" {
+  key: D
+  tempo: 76 bpm
+  tension: floyd
+  orchestration: psychedelic_progressive
+
+  emotion: wonder -> curiosity -> calm -> resolve -> tenderness -> acceptance
+
+  entangle {
+    rhodes <-> strings : 0.6
+    organ <-> horn : 0.4
+  }
+
+  // title: one held chord, the wordmark
+  section "title" (bars: 4) {
+    emotion: wonder
+    density: minimal
+    melody: quantum(style: miles)
+    harmony: superposition(tension: 0.35, smoothness: 0.85)
+    groove: loose
+  }
+
+  // the node and the contract: the idea unfolds, still sparse under the voice
+  section "the node" (bars: 14) {
+    emotion: curiosity
+    density: minimal -> sparse
+    melody: quantum(style: miles)
+    harmony: superposition(tension: 0.42, smoothness: 0.8)
+    groove: loose
+  }
+
+  // the room, live; judged against practice: a pulse arrives, low and steady
+  section "the room" (bars: 12) {
+    emotion: calm
+    density: sparse -> moderate
+    drums: quantum(density: 0.25, complexity: 0.3)
+    melody: quantum(style: miles)
+    harmony: superposition(tension: 0.45, smoothness: 0.75)
+    groove: tight
+  }
+
+  // built and tested: the one lift in the piece
+  section "built" (bars: 6) {
+    emotion: resolve
+    density: moderate
+    drums: quantum(density: 0.4, complexity: 0.4)
+    melody: quantum(style: coltrane)
+    harmony: superposition(tension: 0.5, smoothness: 0.7)
+    groove: tight
+  }
+
+  // not proven: the hush, said plainly
+  section "not proven" (bars: 5) {
+    emotion: calm
+    density: minimal
+    melody: quantum(style: miles)
+    harmony: superposition(tension: 0.38, smoothness: 0.9)
+    groove: loose
+  }
+
+  // the founder and the ask: warmth, then a steady hand
+  section "founder" (bars: 10) {
+    emotion: tenderness -> resolve
+    density: sparse -> moderate
+    drums: quantum(density: 0.3, complexity: 0.35)
+    melody: quantum(style: miles)
+    harmony: superposition(tension: 0.44, smoothness: 0.8)
+    groove: tight
+  }
+
+  // close: resolve to the tonic and let it ring
+  section "close" (bars: 6) {
+    emotion: acceptance
+    density: sparse -> minimal
+    melody: quantum(style: miles)
+    harmony: superposition(tension: 0.3, smoothness: 0.95)
+    groove: loose
+  }
+}
