@@ -1,0 +1,316 @@
+<title>Crowe Sense Pilot Raise</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --paper:#FBF8F2; --cream:#F5F2EB; --ink:#1A1410; --muted:#6F665C; --gold:#B8963F; --gold-soft:#C4A86C;
+  --green:#5A6B4A; --brick:#A53A2A; --line:#E3DCCF; --rail:#EDE7DA; --shadow:rgba(60,45,20,.10);
+  --display:'Fraunces',Georgia,'Times New Roman',serif; --body:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif; --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#141814; --cream:#0F1210; --ink:#E9E6DC; --muted:#9AA096; --gold:#C9A227; --gold-soft:#A88A2E;
+  --green:#86AA6E; --brick:#D8705A; --line:#2A312C; --rail:#171B18; --shadow:rgba(0,0,0,.45);
+}}
+:root[data-theme="dark"]{
+  --paper:#141814; --cream:#0F1210; --ink:#E9E6DC; --muted:#9AA096; --gold:#C9A227; --gold-soft:#A88A2E;
+  --green:#86AA6E; --brick:#D8705A; --line:#2A312C; --rail:#171B18; --shadow:rgba(0,0,0,.45);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--gold-soft);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--gold)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.page{max-width:1080px;margin:0 auto;padding:0 20px 80px}
+
+/* masthead */
+.mast{padding:56px 0 28px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr auto;gap:24px;align-items:end}
+.eyebrow{font:600 11px/1 var(--body);letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin:0 0 14px}
+h1{font:500 clamp(34px,5vw,52px)/1.05 var(--display);font-variation-settings:'opsz' 144;letter-spacing:-.01em;margin:0;text-wrap:balance;max-width:16ch}
+.mast .meta{font:400 12px/1.6 var(--mono);color:var(--muted);text-align:right}
+.mast .meta b{color:var(--ink);font-weight:500}
+
+/* verified numbers strip */
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin:28px 0 0}
+.strip div{background:var(--paper);padding:16px 16px 14px}
+.strip .n{font:500 30px/1 var(--mono);font-variant-numeric:tabular-nums;color:var(--ink);letter-spacing:-.02em}
+.strip .n small{font-size:14px;color:var(--muted);margin-left:2px}
+.strip .l{font:400 12px/1.4 var(--body);color:var(--muted);margin-top:8px}
+.strip-note{font:400 12px/1.5 var(--mono);color:var(--muted);margin:10px 0 0}
+
+/* sections with a running-head rail */
+.sec{display:grid;grid-template-columns:150px minmax(0,1fr);gap:32px;padding:44px 0 0}
+.sec > .rail{position:sticky;top:20px;align-self:start;font:600 11px/1.5 var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding-top:10px;border-top:1px solid var(--line)}
+.sec > .rail.warn{color:var(--brick);border-top-color:var(--brick)}
+.sec > .body{min-width:0}
+h2{font:500 clamp(24px,3vw,31px)/1.15 var(--display);font-variation-settings:'opsz' 72;letter-spacing:-.01em;margin:0 0 14px;text-wrap:balance}
+p{margin:0 0 14px;max-width:66ch}
+p.lede{font-size:18px;line-height:1.55;color:var(--ink)}
+ul{margin:0 0 14px;padding-left:20px;max-width:66ch}li{margin:0 0 6px}
+strong{font-weight:600}
+
+/* tables */
+.tw{overflow-x:auto;margin:14px 0 8px;border:1px solid var(--line);background:var(--paper)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{font:600 11px/1.3 var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--rail)}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+td.k{font-weight:500;white-space:nowrap}
+tr.total td{font-weight:600;background:var(--rail)}
+.pill{display:inline-block;font:500 11px/1 var(--mono);padding:4px 8px;border:1px solid var(--line);border-radius:999px;color:var(--muted);white-space:nowrap}
+.pill.ok{color:var(--green);border-color:var(--green)}
+.pill.wait{color:var(--gold);border-color:var(--gold-soft)}
+.pill.no{color:var(--brick);border-color:var(--brick)}
+
+/* the data path figure */
+.flow{display:grid;grid-template-columns:1fr auto 1fr auto 1.6fr;gap:10px;align-items:center;margin:18px 0 6px}
+.flow .box{background:var(--paper);border:1px solid var(--line);padding:14px 14px 12px;box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 10px 24px -14px var(--shadow)}
+.flow .box h4{font:500 15px/1.2 var(--display);margin:0 0 6px}
+.flow .box p{font:400 12px/1.5 var(--mono);color:var(--muted);margin:0;max-width:none}
+.flow .arrow{color:var(--gold);font:500 20px/1 var(--mono)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chips span{font:500 11px/1 var(--mono);padding:5px 8px;border:1px solid var(--line);color:var(--ink);background:var(--cream)}
+.figcap{font:400 12px/1.5 var(--mono);color:var(--muted);margin:0 0 10px}
+
+/* ask box */
+.ask{display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:baseline;padding:22px 24px;background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--gold);margin:0 0 18px}
+.ask .amt{font:500 44px/1 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.ask .amt small{font-size:15px;color:var(--muted);font-family:var(--body);letter-spacing:0;margin-left:8px}
+.ask p{margin:0;font-size:15px;color:var(--muted)}
+
+/* milestones (a real sequence, so numbered by day) */
+.ms{list-style:none;padding:0;margin:0;display:grid;gap:0;border-top:1px solid var(--line);max-width:none}
+.ms li{display:grid;grid-template-columns:86px minmax(0,1fr);gap:18px;padding:14px 0;border-bottom:1px solid var(--line);margin:0}
+.ms .day{font:500 13px/1.4 var(--mono);color:var(--gold);letter-spacing:.04em}
+.ms .day b{display:block;font-size:22px;color:var(--ink);font-weight:500;letter-spacing:-.02em}
+.ms .what{font-size:15px}
+.ms .how{font:400 12px/1.5 var(--mono);color:var(--muted);margin-top:4px}
+
+/* investor groups */
+.grp{margin:6px 0 22px}
+.grp h3{font:500 18px/1.2 var(--display);margin:0 0 8px}
+.grp h3 small{font:400 12px var(--mono);color:var(--muted);margin-left:10px}
+.grp td.why{color:var(--muted);font-size:13px}
+
+footer{margin-top:56px;padding-top:18px;border-top:1px solid var(--line);font:400 12px/1.6 var(--mono);color:var(--muted)}
+footer p{max-width:none}
+@media (max-width:760px){
+  .mast{grid-template-columns:1fr;gap:12px}.mast .meta{text-align:left}
+  .sec{grid-template-columns:1fr;gap:10px;padding-top:34px}.sec > .rail{position:static;border-top:0;padding-top:0}
+  .flow{grid-template-columns:1fr}.flow .arrow{transform:rotate(90deg);justify-self:center}
+  .ask{grid-template-columns:1fr;gap:8px}
+}
+@media print{
+  body{background:#fff;color:#000}.page{max-width:none;padding:0}
+  .sec > .rail{position:static}.tw{border-color:#bbb}a{text-decoration:none}
+}
+@media (prefers-reduced-motion: no-preference){ .strip div{transition:background .2s} }
+</style>
+
+<div class="page">
+<header class="mast">
+  <div>
+    <p class="eyebrow">Crowe Logic, Inc. &middot; Phoenix, Arizona &middot; investor report</p>
+    <h1>Crowe Sense: the sensing node, and the raise that puts it in real rooms</h1>
+  </div>
+  <div class="meta">Prepared <b>2026-09-01</b><br>For a list of <b>30</b> investors and funders<br>Every figure measured that day or marked as a proposal</div>
+</header>
+
+<div class="strip" aria-label="verified figures">
+  <div><div class="n">6</div><div class="l">surfaces reading one contract: desktop, web, phone, Cortex, terminal, any screen</div></div>
+  <div><div class="n">105</div><div class="l">tests across firmware, relay, CLI, desktop and Cortex integrations, all green</div></div>
+  <div><div class="n">$278</div><div class="l">parts per node at 4 GB, priced live 2026-08-31</div></div>
+  <div><div class="n">43</div><div class="l">condition bands from the founder's 68-video corpus, each cited to its clip</div></div>
+  <div><div class="n">0</div><div class="l">nodes that have run with physical sensors in a room. That is the gap this raise closes</div></div>
+  <div><div class="n">$175<small>k</small></div><div class="l">the ask, on a SAFE; cloud and analytics already covered by credits</div></div>
+</div>
+<p class="strip-note">Sources: firmware 51, relay 7, CLI 25, desktop 14, Cortex 8 tests; hardware/SHOPPING-LIST.md; analysis/practice-envelope; docs/investor-report.md in github.com/MichaelCrowe11/crowe-sense, branch integrate/2026-09-01.</p>
+
+<section class="sec">
+  <div class="rail">In one paragraph</div>
+  <div class="body">
+    <p class="lede">Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5, four Sensirion and Bosch sensors under a louvered radiation shield, a 3D-printed housing, about $280 in parts. It keeps every reading on the node, serves them on the local network, and pushes signed batches to a relay so the same numbers appear on six surfaces the company already ships. Readings are judged against 43 condition bands extracted from the founder's own cultivation corpus, each cited to the clip it came from.</p>
+    <p>The software is built and tested. No node has yet run with physical sensors in a room. This raise puts twenty-five of them in ten growers' rooms and proves the data with the same test that caught the company's own synthetic stream in August.</p>
+    <div class="flow" role="img" aria-label="Data path: node to relay to six surfaces">
+      <div class="box"><h4>The node</h4><p>Pi 5 &middot; SCD41 &middot; SHT45 &middot; BME688 &middot; VEML7700<br>SQLite on the node &middot; local API :8078<br>Ed25519-signed batches out</p></div>
+      <div class="arrow" aria-hidden="true">&rarr;</div>
+      <div class="box"><h4>The relay</h4><p>one Cloudflare Worker<br>D1 hot 30 days &middot; R2 raw forever<br>Crowe ID on every read</p></div>
+      <div class="arrow" aria-hidden="true">&rarr;</div>
+      <div class="box"><h4>Six surfaces, one contract</h4><div class="chips"><span>desktop</span><span>web</span><span>phone + Mac</span><span>Cortex</span><span>terminal</span><span>House / kiosk</span></div></div>
+    </div>
+    <p class="figcap">contracts/telemetry-v1.md. The local API and the relay serve identical paths, so a surface does not know or care which one it is reading.</p>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="rail">What exists today</div>
+  <div class="body">
+    <h2>Measured on 2026-09-01</h2>
+    <div class="tw"><table>
+      <tr><th>Piece</th><th>State</th><th>Evidence</th></tr>
+      <tr><td class="k">Firmware 0.2.0: sampler, signed uploader, local API, watchdog, six drivers</td><td><span class="pill ok">built</span></td><td>51 tests, ruff clean</td></tr>
+      <tr><td class="k">Relay: signed ingest, D1, R2, Crowe ID reads</td><td><span class="pill wait">built, not deployed</span></td><td>7 end-to-end tests including signature verification</td></tr>
+      <tr><td class="k">Contract every surface shares</td><td><span class="pill ok">written</span></td><td>contracts/telemetry-v1.md, JSON schema, D1 schema</td></tr>
+      <tr><td class="k">Desktop app: the Environment lane fills itself with measured rows</td><td><span class="pill wait">branch</span></td><td>14 tests + 67 parity tests</td></tr>
+      <tr><td class="k">Terminal: <code>crowe sense</code>, seven subcommands</td><td><span class="pill wait">branch</span></td><td>25 tests; full suite 2,215 green</td></tr>
+      <tr><td class="k">Cortex panel</td><td><span class="pill wait">branch</span></td><td>8 tests + 28 adjacent; typecheck and build clean</td></tr>
+      <tr><td class="k">Web edge, /app/sense/*</td><td><span class="pill wait">patched, awaiting deploy</span></td><td>syntax-checked; one-line deploy</td></tr>
+      <tr><td class="k">Phone and Mac client 0.2.0, direct or cloud source</td><td><span class="pill ok">compiles</span></td><td>cargo check clean</td></tr>
+      <tr><td class="k">House: embeddable panel and kiosk autostart</td><td><span class="pill ok">built</span></td><td>one tag mounts the whole surface</td></tr>
+      <tr><td class="k">Enclosures: indoor radiation-shield head; field variant with drive and hotspot bays</td><td><span class="pill ok">parametric OpenSCAD</span></td><td>print settings and tolerances documented</td></tr>
+      <tr><td class="k">Practice envelope, provenance test, stage and harvest logs</td><td><span class="pill ok">built</span></td><td>23 regression tests, one per mistake it made</td></tr>
+      <tr><td class="k">Node bill of materials</td><td><span class="pill ok">priced live</span></td><td>$278 at 4 GB, $343 at 8 GB</td></tr>
+    </table></div>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="rail warn">Not proven, said first</div>
+  <div class="body">
+    <h2>What is not proven</h2>
+    <p><strong>No Crowe Sense node has run with physical sensors in a growing room.</strong> An earlier daemon ran the whole software path for 23 days in May and June 2026 and produced 3,596,420 rows across 20 metrics. On 2026-08-04 the founder's own provenance test showed the tent temperature, humidity and light channels were not sensor measurements; no sensors had been installed in those tents. The founder confirmed it the same day and drafted a correction to the published Zenodo record (10.5281/zenodo.20722953). The correction is written and goes up before this report goes out.</p>
+    <p><strong>No revenue on this product.</strong> The company's software surfaces have no paying subscribers. The founder's businesses have sold cultivation products and courses; none of that is attributed here.</p>
+    <p><strong>Yield prediction is not built.</strong> The dataset that would train it, sensor windows joined to harvest outcomes, has zero labelled rows. The tools to log stages and harvests exist; the pilot fills them.</p>
+    <p>The reason to say this first: the provenance test is the asset. A company that caught its own synthetic data, published the method, and gates every future dataset on it is selling something a sensor vendor cannot: numbers a grower can trust.</p>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="rail">The founder</div>
+  <div class="body">
+    <h2>Why this founder</h2>
+    <p>Michael Crowe has grown mushrooms since 2005, starting at fifteen, about ten of those years commercially (Southwest Mushrooms, Phoenix; the farm closed in February 2025). About 195,000 people subscribe to his cultivation channel; 68 of those videos were parsed into 642 numeric constants, of which 43 survive as condition bands a sensor can be judged against, with a documented rule that a band needs two independent statements before it judges anything. Nobody else can ship that layer, because nobody else has the corpus. He also built every surface in the table above.</p>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="rail">The device</div>
+  <div class="body">
+    <h2>The device, in one table</h2>
+    <div class="tw"><table>
+      <tr><td class="k">Compute</td><td>Raspberry Pi 5, 4 GB, active cooler, 64 GB microSD</td></tr>
+      <tr><td class="k">Sensors</td><td>SCD41 (NDIR CO2, T, RH), SHT45 (reference T, RH), BME688 (VOC, pressure), VEML7700 (lux); SDP810 differential pressure on the flow-hood node</td></tr>
+      <tr><td class="k">Housing</td><td>3D-printed PETG, louvered radiation-shield head, about 350 g, 14 h print</td></tr>
+      <tr><td class="k">On the node</td><td>SQLite (WAL), local API on :8078 with a kiosk page, Ed25519-signed uploads, nothing deleted when sent</td></tr>
+      <tr><td class="k">Cloud</td><td>one Cloudflare Worker: D1 (30 days hot), R2 (raw batches forever), Crowe ID on every read</td></tr>
+      <tr><td class="k">Parts cost</td><td class="num">$278 (4 GB) &middot; $343 (8 GB)</td></tr>
+      <tr><td class="k">Proposed price</td><td>$449 per node, relay included with any paid Crowe ID tier; set after the pilot</td></tr>
+    </table></div>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="rail">The ask</div>
+  <div class="body">
+    <h2>$175,000 on a SAFE</h2>
+    <div class="ask"><div class="amt">$175,000<small>SAFE</small></div><p>Hardware and people only. Cloud, analytics and model inference run on credits the company already holds: Cloudflare $99,657 to June 2027 (under 1% used), Azure $20,000, PostHog $50,000, and $13,500 in other unclaimed credits. A $60,000 first tranche (angel or grant) funds the hardware, the engineering contract, the instruments and half the pilot program, and reaches the day-90 milestone.</p></div>
+    <div class="tw"><table>
+      <tr><th>Use</th><th class="num">Amount</th></tr>
+      <tr><td>Pilot hardware: 25 nodes, printer, reference instruments, spares</td><td class="num">$12,000</td></tr>
+      <tr><td>Hardware engineering, contract: sensor-head thermal validation, calibration jig, enclosure DFM, pre-compliance</td><td class="num">$35,000</td></tr>
+      <tr><td>Founder, twelve months</td><td class="num">$60,000</td></tr>
+      <tr><td>Pilot program: ten growers, installs, travel, stipends</td><td class="num">$15,000</td></tr>
+      <tr><td>Compliance and safety review, product insurance</td><td class="num">$10,000</td></tr>
+      <tr><td>Legal: SAFE, IP assignment, provisional filing on the envelope method</td><td class="num">$8,000</td></tr>
+      <tr><td>Calibration and reference instruments</td><td class="num">$4,000</td></tr>
+      <tr><td>Contingency (18%)</td><td class="num">$31,000</td></tr>
+      <tr class="total"><td>Total</td><td class="num">$175,000</td></tr>
+      <tr><td>Cloud, analytics, model inference</td><td class="num">$0</td></tr>
+    </table></div>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="rail">Milestones</div>
+  <div class="body">
+    <h2>Dated from close, each with its proof</h2>
+    <ol class="ms">
+      <li><div class="day">day<b>30</b></div><div><div class="what">Five nodes in real rooms at the founder's site and two pilot growers</div><div class="how">first week of data passes provenance_check.py (exit 0), published with the run log</div></div></li>
+      <li><div class="day">day<b>90</b></div><div><div class="what">Twenty-five nodes at ten growers; all six surfaces in weekly use</div><div class="how">relay shows 25 nodes reporting on 6 of 7 days; PostHog funnel, paired to day-7 retention, above 80%</div></div></li>
+      <li><div class="day">day<b>180</b></div><div><div class="what">Twenty labelled harvests; Western SARE application submitted (due 2026-10-28, $35,000, non-dilutive)</div><div class="how">datasets/outcomes.csv row count; SARE confirmation</div></div></li>
+      <li><div class="day">day<b>365</b></div><div><div class="what">One hundred nodes shipped at $449; the supervised yield model trained on real labels, or a published reason it cannot be yet</div><div class="how">shipping records; a model card with held-out error, or the negative result</div></div></li>
+    </ol>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="rail">Unit economics</div>
+  <div class="body">
+    <h2>Per node, proposed</h2>
+    <div class="tw"><table>
+      <tr><td class="k">Parts</td><td class="num">$278</td></tr>
+      <tr><td class="k">Print, assembly, test (1.5 h)</td><td class="num">$40</td></tr>
+      <tr><td class="k">Landed cost</td><td class="num">$318</td></tr>
+      <tr><td class="k">Price</td><td class="num">$449</td></tr>
+      <tr><td class="k">Gross margin</td><td class="num">29% at pilot volume; parts fall about 20% at 100 units</td></tr>
+      <tr><td class="k">Cloud cost</td><td class="num">$0 through June 2027 on credit; under $1 per node-month after</td></tr>
+    </table></div>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="rail">Risks</div>
+  <div class="body">
+    <h2>Risks, plainly</h2>
+    <div class="tw"><table>
+      <tr><th>Risk</th><th>What is done about it</th></tr>
+      <tr><td class="k">Pi 5 pricing (the 2026 DRAM shortage doubled 2024 prices)</td><td>4 GB board; the firmware runs on a Pi 4 or a Compute Module if it comes to that</td></tr>
+      <tr><td class="k">Sensor drift, especially NDIR CO2</td><td>SHT45 as reference, SCD41 self-calibration on, every reading carries its driver and a quality flag; reference instruments in the budget</td></tr>
+      <tr><td class="k">A second provenance failure</td><td>the test runs on every node's first week and is published with the data</td></tr>
+      <tr><td class="k">Founder dependence</td><td>every surface, the contract and the setup pipeline are documented in the repo; a contractor built the desktop and Cortex integrations from the contract alone</td></tr>
+      <tr><td class="k">Market size</td><td>not claimed here; the pilot measures whether ten growers keep the nodes plugged in</td></tr>
+    </table></div>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="rail">The thirty</div>
+  <div class="body">
+    <h2>Thirty investors and funders</h2>
+    <p>Ten agtech and controlled-environment funds, six hardware and climate seed funds and accelerators, eight Arizona programs and angel groups, six non-dilutive programs. Every URL was verified active in 2025 or 2026 on 2026-09-01; award ceilings are the current published figures. Contact names are deliberately absent: they change, and a wrong one costs more than a blank. Start with HAX, Techstars Future of Food, Canyon Angels, Desert Angels, Arizona Tech Investors and the USDA and NSF SBIR windows; the large agtech funds are later-round relationships.</p>
+    <div class="grp"><h3>Agtech and controlled-environment funds<small>10</small></h3><div class="tw"><table><tr><th>Name</th><th>Stage or award</th><th>Why it fits</th></tr>
+<tr><td class="k"><a href="https://agfunder.com/invest/" target="_blank" rel="noopener">AgFunder</a></td><td>Seed, Series A</td><td class="why">AgFunder&#x27;s oversubscribed $100M+ Fund IV backs seed-to-Series-A frontier agrifood technology including robotics and sensors, a category fit for a Raspberry Pi based environmental sensing platform for indoor mushroom and CEA growers.</td></tr>
+<tr><td class="k"><a href="https://anterracapital.com/" target="_blank" rel="noopener">Anterra Capital</a></td><td>$1M to $10M initial check (stated on the fund&#x27;s own site)</td><td class="why">Anterra&#x27;s thesis is digital and data infrastructure across the agrifood value chain, and its newest fund explicitly targets vertical AI for agriculture, which matches the sensor node plus Cloudflare relay stack Crowe Sense represents.</td></tr>
+<tr><td class="k"><a href="https://fall-line-capital.com/" target="_blank" rel="noopener">Fall Line Capital</a></td><td>Seed through growth</td><td class="why">Fall Line field-tests portfolio technologies like soil sensors and autonomous implements on the farmland it owns and manages, which maps onto validating a physical CO2, VOC and climate sensing node in real grow rooms ahead of a production run.</td></tr>
+<tr><td class="k"><a href="https://astanor.com/" target="_blank" rel="noopener">Astanor Ventures</a></td><td>Seed through growth</td><td class="why">Astanor explicitly funds controlled environment agriculture and impact-native agrifood startups from seed stage, making an indoor-growing environmental sensing platform a direct thesis match.</td></tr>
+<tr><td class="k"><a href="https://www.iselectfund.com/agtech/" target="_blank" rel="noopener">iSelect Fund</a></td><td>Seed through Series A (some later follow-on)</td><td class="why">iSelect&#x27;s stated mission of funding sensor-based farm management tools and its indoor-farming portfolio company Artemis show a current appetite for exactly the CO2, VOC and climate sensing hardware Crowe Sense builds for indoor cultivation.</td></tr>
+<tr><td class="k"><a href="https://www.middlelandcapital.com/" target="_blank" rel="noopener">Middleland Capital</a></td><td>Seed, Series A (site language now skews later)</td><td class="why">Middleland&#x27;s portfolio already includes precision-ag sensing hardware (EarthOptics maps soil data the way Crowe Sense maps grow-room air), showing the fund is comfortable underwriting physical agricultural sensing plays.</td></tr>
+<tr><td class="k"><a href="https://www.acre.vc/" target="_blank" rel="noopener">Acre Venture Partners</a></td><td>Seed through Series B</td><td class="why">Acre&#x27;s current $140M Fund III already holds an indoor-farming software company (Source) and ag-robotics hardware bets, so a hardware plus software sensing platform for indoor mushroom growers sits inside their existing thesis.</td></tr>
+<tr><td class="k"><a href="https://www.radicle.vc/" target="_blank" rel="noopener">Radicle Growth</a></td><td>Early-stage seed, challenge and accelerator model</td><td class="why">Radicle&#x27;s Digital Ag vertical and challenge-based sourcing model (its Sept 2025 AgRogue Growth Partners platform with Land O&#x27;Lakes) are built to surface sensor-and-data farm technology like Crowe Sense.</td></tr>
+<tr><td class="k"><a href="https://svgventures.com/" target="_blank" rel="noopener">SVG Ventures THRIVE</a></td><td>Up to $1M for Global Impact Challenge finalists (stated by the fund)</td><td class="why">THRIVE&#x27;s recent portfolio includes storage-monitoring sensor company Cellar Insights (Jan 2026) and its Global Impact Challenge funds early-stage agrifood hardware and software, both lining up with a pre-revenue CEA sensing node seeking pilot capital.</td></tr>
+<tr><td class="k"><a href="https://betterfoodventures.com/agtech" target="_blank" rel="noopener">Better Food Ventures</a></td><td>Seed, Series A</td><td class="why">Better Food Ventures backs seed-stage software-driven farm tools, so Crowe Sense should lead with the Cloudflare relay, apps and CLI as the core product to match their stated thesis.</td></tr>
+</table></div></div>
+<div class="grp"><h3>Hardware and climate seed funds and accelerators<small>6</small></h3><div class="tw"><table><tr><th>Name</th><th>Stage or award</th><th>Why it fits</th></tr>
+<tr><td class="k"><a href="https://www.lemnos.vc/" target="_blank" rel="noopener">Lemnos</a></td><td>Pre-seed and seed, hardware and deep tech only</td><td class="why">Lemnos is a hardware-exclusive early-stage fund with a track record in agtech and IoT sensing hardware, a close match for a Raspberry Pi based environmental sensing node moving from firmware-complete into pilot manufacturing.</td></tr>
+<tr><td class="k"><a href="https://hax.co/faq/" target="_blank" rel="noopener">HAX (SOSV)</a></td><td>Up to $550,000 pre-seed; first check $250,000 ($150,000 cash plus $100,000 in-kind engineering and lab support) on an uncapped post-money SAFE (stated on the HAX FAQ)</td><td class="why">HAX is a pre-seed program built for hard-tech founders with in-house mechanical and electrical engineers, DFM and small-batch manufacturing support, directly addressing the enclosure, sensor integration and pilot production run Crowe Sense needs before scaling.</td></tr>
+<tr><td class="k"><a href="https://lowercarbon.com/" target="_blank" rel="noopener">Lowercarbon Capital</a></td><td>Pre-seed through growth, climate tech with a large hardware-heavy sub-portfolio</td><td class="why">Lowercarbon funds deep-tech climate hardware and has in-house scientific and engineering diligence capacity that could evaluate a CO2, VOC and differential-pressure sensing node as CEA climate infrastructure.</td></tr>
+<tr><td class="k"><a href="https://www.techstars.com/accelerators/future-of-food" target="_blank" rel="noopener">Techstars Future of Food Powered by Ecolab</a></td><td>$220,000 (Techstars standard terms: $20,000 for 5% common plus $200,000 uncapped MFN SAFE)</td><td class="why">This is the direct successor to Techstars Farm to Fork and is purpose-built for ag and food-system technology, a natural venue for Crowe Sense&#x27;s sensing node for indoor cultivation and CEA growers.</td></tr>
+<tr><td class="k"><a href="https://www.ycombinator.com/blog/ycs-500-000-standard-deal" target="_blank" rel="noopener">Y Combinator</a></td><td>$500,000 ($125,000 for 7% plus $375,000 uncapped MFN SAFE)</td><td class="why">YC&#x27;s 2026 Requests for Startups name agriculture robots and physical hardware as priority categories, and its flat $500k check would fund a Crowe Sense pilot production run outright.</td></tr>
+<tr><td class="k"><a href="https://elementalimpact.com/" target="_blank" rel="noopener">Elemental Impact</a></td><td>First-of-a-kind and early commercial deployment funding across energy, industry, food and agriculture, water</td><td class="why">Elemental Impact funds food-and-agriculture climate hardware moving from prototype into real-world deployment, which lines up with Crowe Sense&#x27;s move from unit-tested firmware into a validated pilot run for CEA growers.</td></tr>
+</table></div></div>
+<div class="grp"><h3>Arizona<small>8</small></h3><div class="tw"><table><tr><th>Name</th><th>Stage or award</th><th>Why it fits</th></tr>
+<tr><td class="k"><a href="https://canyonangels.org/about" target="_blank" rel="noopener">Canyon Angels</a></td><td>Pre-seed/seed, accredited angel group</td><td class="why">A Phoenix angel group meeting on the Grand Canyon University campus is a realistic first stop for a local hardware founder with an existing regional audience who needs warm introductions more than a cold pitch.</td></tr>
+<tr><td class="k"><a href="https://desertangels.org/about-us/" target="_blank" rel="noopener">Desert Angels</a></td><td>Seed/early-stage, accredited angel network</td><td class="why">Arizona&#x27;s oldest and top-ranked angel network (number one in the Southwest per the HALO Report) gives a Phoenix hardware startup access to the state&#x27;s deepest bench of accredited investors and 12 sidecar funds.</td></tr>
+<tr><td class="k"><a href="https://venturemadness.com/" target="_blank" rel="noopener">Invest Southwest (Venture Madness)</a></td><td>Early-stage investor and founder matching conference and network</td><td class="why">Arizona&#x27;s longest-running venture conference (since 1992) exists to put Arizona tech founders in front of the state&#x27;s active accredited investors, which is the local-network leverage a Phoenix founder with a built-in audience should use.</td></tr>
+<tr><td class="k"><a href="https://mcida.com/about-us/news/tallwave-capital-named-most-active-in-state-for-second-year-in-a-row/" target="_blank" rel="noopener">Tallwave Capital</a></td><td>Pre-seed, seed and post-seed VC fund</td><td class="why">Named Arizona&#x27;s most active venture capital firm two years running, Tallwave Capital is a Phoenix-metro fund whose local reputation and network could open doors beyond its own check for a Phoenix hardware startup.</td></tr>
+<tr><td class="k"><a href="https://www.aztechcouncil.org/aca-asu-partner-on-six-week-hybrid-startup-accelerator/" target="_blank" rel="noopener">Arizona Technology Council</a></td><td>Ecosystem and network organization, not a direct funder</td><td class="why">The state&#x27;s main tech trade association runs founder-investor events (Tech Talent Summit, Startup World Cup AZ) and accelerator partnerships (LaunchAZ, Venture Start) that a Phoenix-based founder with a YouTube following can convert into investor introductions.</td></tr>
+<tr><td class="k"><a href="https://www.coplex.com/" target="_blank" rel="noopener">Coplex</a></td><td>Corporate startup studio and venture builder</td><td class="why">A Phoenix venture studio with a track record of building 350+ companies offers a local hands-on operating and fundraising network, though its usual model is building ventures for corporate clients rather than investing in an outside founder&#x27;s company.</td></tr>
+<tr><td class="k"><a href="https://www.aztechcelerator.com/about" target="_blank" rel="noopener">AZ TechCelerator</a></td><td>Tech and hardware business incubator (medical devices, IT, renewable energy)</td><td class="why">A 66,000 square foot Arizona incubator built for hardware-adjacent sectors is a plausible fit for a Phoenix-area company that needs affordable space and mentors to get through hardware validation and a pilot run.</td></tr>
+<tr><td class="k"><a href="https://arizonatechinvestors.com/" target="_blank" rel="noopener">Arizona Tech Investors (ATI)</a></td><td>Seed and early-stage angel group</td><td class="why">Arizona&#x27;s largest angel organization lists advanced manufacturing and sustainability among its target sectors and screens three companies at each of five member meetings a year, a direct route for a Phoenix hardware founder to reach 100+ accredited local angels.</td></tr>
+</table></div></div>
+<div class="grp"><h3>Non-dilutive programs<small>6</small></h3><div class="tw"><table><tr><th>Name</th><th>Stage or award</th><th>Why it fits</th></tr>
+<tr><td class="k"><a href="https://www.nifa.usda.gov/grants/programs/sbir-sttr/program-information" target="_blank" rel="noopener">USDA SBIR/STTR Phase I (NIFA)</a></td><td>$175,000 max for most topics ($125,000 for topics 8.6 and 8.12); ceiling, not guaranteed</td><td class="why">Funds exactly the CO2, VOC and climate sensor hardware and firmware R&amp;D Crowe Sense needs to validate for indoor mushroom and CEA cultivation.</td></tr>
+<tr><td class="k"><a href="https://www.nsf.gov/funding/opportunities/small-business-innovation-research-small-business-technology/nsf26-510/solicitation" target="_blank" rel="noopener">NSF SBIR Phase I (America&#x27;s Seed Fund)</a></td><td>$305,000 max (solicitation NSF 26-510); ceiling, not guaranteed</td><td class="why">NSF explicitly funds small-business deep-tech hardware R&amp;D, and a multi-sensor Pi-based environmental node with a Cloudflare relay is that kind of hardware and software integration project.</td></tr>
+<tr><td class="k"><a href="https://western.sare.org/grants/farmer-rancher/" target="_blank" rel="noopener">Western SARE Farmer/Rancher Grant</a></td><td>$35,000 flat award</td><td class="why">A producer plus technical advisor structure fits piloting Crowe Sense sensor validation on a real Arizona mushroom or CEA grow without positioning the applicant as an operating farm.</td></tr>
+<tr><td class="k"><a href="https://www.nifa.usda.gov/grants/programs/agriculture-food-research-initiative/afri-deadlines" target="_blank" rel="noopener">USDA NIFA AFRI, Agriculture Systems and Technology</a></td><td>verify: no per-track cap published; overall AFRI awards range widely, check the current NOFO</td><td class="why">Agriculture Systems and Technology is one of AFRI&#x27;s six priority areas and explicitly covers precision-agriculture sensing and engineering, matching Crowe Sense&#x27;s environmental sensing platform for CEA.</td></tr>
+<tr><td class="k"><a href="https://www.azcommerce.com/news-events/news/2025/7/arizona-commerce-authority-accepting-applications-for-2025-arizona-innovation-challenge/" target="_blank" rel="noopener">Arizona Innovation Challenge (Arizona Commerce Authority)</a></td><td>Minimum $50,000 non-dilutive per awardee, up to 10 awardees per cycle (ACA July 2025 release)</td><td class="why">A state-run non-dilutive competition whose eligible industries include hardware and advanced manufacturing is a strong fit for a pre-revenue Phoenix hardware company that wants runway toward a pilot run without giving up equity.</td></tr>
+<tr><td class="k"><a href="https://agriculture.az.gov/about-us/divisions/agriculture-food-systems-support/specialty-crop-block-grant-program-scbgp" target="_blank" rel="noopener">Arizona Specialty Crop Block Grant Program (AZDA / USDA AMS)</a></td><td>verify: about $1.25M total Arizona allocation for FY2026 split across awardees, no per-project cap published</td><td class="why">Cultivated mushrooms are a USDA-recognized specialty crop, so a sensing project framed as a broad benefit to Arizona mushroom and CEA growers, not a single-company sale, can qualify.</td></tr>
+</table></div></div>
+  </div>
+</section>
+
+<footer>
+  <p>Crowe Logic, Inc. &middot; github.com/MichaelCrowe11/crowe-sense, branch integrate/2026-09-01: firmware, relay, contract, enclosures, archive with the correction, analysis, the six integrations, the shopping list, the setup pipeline, and this report as docs/investor-report.md. Prepared 2026-09-01. Nothing here is a projection dressed as a fact.</p>
+</footer>
+</div>
