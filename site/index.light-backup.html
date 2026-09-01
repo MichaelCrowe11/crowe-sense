@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crowe Sense, Founding Grower Access</title>
+<meta name="description" content="A cultivation intelligence system that reads your grow rooms in real time and measures them against a documented method. Founding grower access is open.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#F5F2EB; --paper:#FBF8F2; --ink:#1A1410; --muted:#6F665C;
+    --gold:#C4A86C; --green:#5A6B4A; --aubergine:#3E2D38; --brick:#A53A2A;
+    --hair:rgba(26,20,16,.12);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--cream); color:var(--ink);
+    font-family:"Inter",system-ui,sans-serif; font-size:18px; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px; margin:0 auto; padding:0 24px}
+  h1,h2,h3{font-family:"Fraunces",Georgia,serif; font-weight:500; line-height:1.12; letter-spacing:-.01em; margin:0}
+  h1{font-size:clamp(40px,7vw,68px)}
+  h2{font-size:clamp(26px,4vw,36px); margin-bottom:14px}
+  h3{font-size:21px; margin-bottom:6px}
+  p{margin:0 0 16px}
+  a{color:var(--ink)}
+  .eyebrow{font-family:"Inter"; font-size:13px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); margin-bottom:18px}
+  .accent{color:var(--brick)}
+  header.hero{padding:88px 0 64px; border-bottom:1px solid var(--hair)}
+  header.hero p.lede{font-size:22px; color:var(--ink); max-width:36ch; margin-top:22px}
+  .rule{height:1px; background:var(--hair); border:0; margin:0}
+  section{padding:56px 0; border-bottom:1px solid var(--hair)}
+  .proof{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:28px 0 8px}
+  .proof .stat{background:var(--paper); border:1px solid var(--hair); border-radius:10px; padding:20px 18px}
+  .proof .num{font-family:"Fraunces",serif; font-size:34px; line-height:1; color:var(--ink)}
+  .proof .lab{font-size:13px; color:var(--muted); margin-top:8px; letter-spacing:.02em}
+  .twocol{display:grid; grid-template-columns:1fr 1fr; gap:32px; margin-top:8px}
+  .card{background:var(--paper); border:1px solid var(--hair); border-radius:12px; padding:24px}
+  .card h3{color:var(--aubergine)}
+  ul.clean{list-style:none; padding:0; margin:0}
+  ul.clean li{padding:10px 0 10px 22px; position:relative; border-top:1px solid var(--hair)}
+  ul.clean li:first-child{border-top:0}
+  ul.clean li:before{content:""; position:absolute; left:0; top:18px; width:9px; height:9px; border-radius:50%; background:var(--gold)}
+  .offer{background:var(--aubergine); color:var(--paper); border-radius:14px; padding:40px 32px; margin-top:8px}
+  .offer h2{color:var(--paper)}
+  .offer p{color:rgba(251,248,242,.82)}
+  .offer .price{font-family:"Fraunces",serif; font-size:30px; color:var(--gold); margin:14px 0 6px}
+  .offer .hold{font-size:13px; color:rgba(251,248,242,.6); letter-spacing:.04em}
+  .cta{display:inline-block; margin-top:22px; background:var(--gold); color:var(--ink);
+    font-weight:600; text-decoration:none; padding:15px 28px; border-radius:9px; letter-spacing:.01em}
+  .founder{display:flex; gap:20px; align-items:flex-start}
+  .founder .q{font-family:"Fraunces",serif; font-size:22px; line-height:1.4; color:var(--ink)}
+  .muted{color:var(--muted)}
+  .small{font-size:14px; color:var(--muted)}
+  footer{padding:40px 0 80px; color:var(--muted); font-size:14px}
+  .tag{display:inline-block; font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--green); border:1px solid var(--hair); border-radius:999px; padding:5px 12px; margin-bottom:18px}
+  @media(max-width:620px){ .proof{grid-template-columns:1fr} .twocol{grid-template-columns:1fr} .founder{flex-direction:column} }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Crowe Sense</div>
+    <h1>Your grow rooms, read in real time, against a method that works.</h1>
+    <p class="lede">A cultivation intelligence system. It watches the air your mushrooms actually breathe, and measures it against twenty years of documented growing.</p>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <span class="tag">Running now, not a concept</span>
+    <h2>The system is already live.</h2>
+    <p>Crowe Sense has been logging two grow rooms and a laminar flow hood continuously, without a single gap, for weeks. Every reading is real, taken on hardware built and running on the farm.</p>
+    <div class="proof">
+      <div class="stat"><div class="num">3.4M</div><div class="lab">environmental readings logged</div></div>
+      <div class="stat"><div class="num">18.5</div><div class="lab">days continuous, no gaps</div></div>
+      <div class="stat"><div class="num">2 + 1</div><div class="lab">grow rooms and a flow hood</div></div>
+    </div>
+    <p class="small">Carbon dioxide, temperature, humidity, vapor pressure deficit, light, and a derived fruiting readiness score, sampled every few seconds and held as a permanent record.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>What it does today, and what your access builds next.</h2>
+    <div class="twocol">
+      <div class="card">
+        <h3>Live today</h3>
+        <ul class="clean">
+          <li>Reads each room in real time and holds the full history.</li>
+          <li>Compares the live conditions against the documented target band for the species in that room.</li>
+          <li>Flags drift before it costs you a flush, for example carbon dioxide climbing out of the fruiting window.</li>
+          <li>Predicts flow hood filter life from real pressure across the HEPA, so you replace it on schedule, not by guess.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>What founding access funds</h3>
+        <ul class="clean">
+          <li>Yield and quality prediction trained on real harvest outcomes joined to the conditions that produced them.</li>
+          <li>Species coverage expanded across the full catalog of gourmet and medicinal varieties.</li>
+          <li>The grower console on phone and desktop, asking your own rooms plain questions.</li>
+          <li>Early hardware kits for growers who want the same rig in their own space.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="small" style="margin-top:22px">We will not tell you it predicts your harvest yet. It does not. It reads your rooms, and it knows what good looks like. Outcome prediction is the work your access pays for, and you get it first.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Built on a method, not a guess.</h2>
+    <p>Most monitoring tells you a number and leaves you to interpret it. Crowe Sense measures every reading against a documented growing method: a written manual of more than a quarter million words and years of filmed grows, covering colonization timelines, fruiting conditions, and expected yields for each species.</p>
+    <p>That is the difference. The system does not just say the carbon dioxide is 900 parts per million. It knows that for lion's mane in fruiting, that is inside the band, that the room is on roughly day nine, and what the first flush should weigh on a block that size.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="offer">
+      <h2>Founding Grower access.</h2>
+      <p>A limited first group. You fund the build, you shape it, and you get every capability before anyone else, at a price that will never be offered again.</p>
+      <ul class="clean" style="margin:18px 0">
+        <li style="color:rgba(251,248,242,.9); border-color:rgba(251,248,242,.16)">The live system and every capability as it ships.</li>
+        <li style="color:rgba(251,248,242,.9); border-color:rgba(251,248,242,.16)">Outcome prediction first, ahead of general release.</li>
+        <li style="color:rgba(251,248,242,.9); border-color:rgba(251,248,242,.16)">Direct line to the build, your rooms inform the model.</li>
+        <li style="color:rgba(251,248,242,.9); border-color:rgba(251,248,242,.16)">Founding pricing locked for life.</li>
+      </ul>
+      <div class="price">Founding price, to confirm</div>
+      <div class="hold">Placeholder, awaiting your sign off before this goes live.</div>
+      <a class="cta" href="mailto:michael@southwestmushrooms.com?subject=Crowe%20Sense%20Founding%20Grower">Request founding access</a>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="founder">
+      <div>
+        <h2>From the grower.</h2>
+        <p class="q">I have been growing since 2005, since I was fifteen. I ran a commercial farm in Phoenix for nearly a decade. Crowe Sense is the system I always wanted watching my rooms: one that knows the method, watches the air, and tells me what is about to happen before it does.</p>
+        <p class="muted">Michael Crowe, Southwest Mushrooms</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Crowe Sense, a Crowe Logic system. Cultivation intelligence for serious growers.</p>
+    <p class="small">Draft, staged for review. Not yet published.</p>
+  </div>
+</footer>
+
+</body>
+</html>

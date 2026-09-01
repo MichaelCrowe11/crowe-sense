@@ -1,0 +1,18 @@
+{
+  "title": "crowe sense  ·  room 2",
+  "badge": "live",
+  "badge_kind": "ok",
+  "events": [
+    { "type": "cmd",     "text": "crowe-sense watch --room 2 --species lions-mane" },
+    { "type": "out",     "text": "streaming  ·  sergikdropz pi  ·  sampling every few seconds" },
+    { "type": "wait",    "ms": 400 },
+    { "type": "out",     "text": "co2 902ppm   temp 20.9C   rh 91%   vpd 0.21kPa   day 9" },
+    { "type": "wait",    "ms": 350 },
+    { "type": "comment", "text": "# every reading checked against the documented method, not just shown." },
+    { "type": "ok",      "text": "OK    co2              inside fruiting band  (800 to 1000ppm)" },
+    { "type": "ok",      "text": "OK    vpd              in range for pinning" },
+    { "type": "warn",    "text": "WARN  hepa             filter at 78% life  ·  replace in ~6 days" },
+    { "type": "wait",    "ms": 300 },
+    { "type": "out",     "text": "first flush forecast: day 11 to 12  ·  3.4M readings on record  ->  exit 0" }
+  ]
+}
