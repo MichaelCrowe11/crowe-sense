@@ -24,4 +24,4 @@ Repo and report: https://github.com/MichaelCrowe11/crowe-sense (branch integrate
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com

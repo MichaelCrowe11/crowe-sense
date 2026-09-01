@@ -1,5 +1,5 @@
 CROWE SENSE OUTREACH, REVIEW COPY, 2026-09-01
-Thirty drafts, none sent. Recipient lines are blank on purpose. Mark each one SEND, EDIT or SKIP.
+Thirty drafts, none sent. From: michael@crowelogic.com. Recipient lines are blank on purpose (recipients.csv is the sheet to fill). Mark each one SEND, EDIT or SKIP.
 
 ==================================================================
 FILE: 01-agfunder.md
@@ -30,7 +30,7 @@ Repo and report: https://github.com/MichaelCrowe11/crowe-sense (branch integrate
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 02-anterra-capital.md
@@ -61,7 +61,7 @@ Repo and report: https://github.com/MichaelCrowe11/crowe-sense (branch integrate
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 03-astanor-ventures.md
@@ -92,7 +92,7 @@ Repo and report: https://github.com/MichaelCrowe11/crowe-sense (branch integrate
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 04-iselect-fund.md
@@ -123,7 +123,7 @@ Repo and report: https://github.com/MichaelCrowe11/crowe-sense (branch integrate
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 05-ospraie-ag-science.md
@@ -154,7 +154,7 @@ Repo and report: https://github.com/MichaelCrowe11/crowe-sense (branch integrate
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 06-middleland-capital.md
@@ -185,7 +185,7 @@ Repo and report: https://github.com/MichaelCrowe11/crowe-sense (branch integrate
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 07-acre-venture-partners.md
@@ -216,7 +216,7 @@ Repo and report: https://github.com/MichaelCrowe11/crowe-sense (branch integrate
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 08-better-food-ventures.md
@@ -247,7 +247,7 @@ Repo and report: https://github.com/MichaelCrowe11/crowe-sense (branch integrate
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 09-radicle-growth.md
@@ -278,7 +278,7 @@ Repo and report: https://github.com/MichaelCrowe11/crowe-sense (branch integrate
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 10-svg-ventures-thrive.md
@@ -309,7 +309,7 @@ Repo and report: https://github.com/MichaelCrowe11/crowe-sense (branch integrate
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 11-lemnos.md
@@ -340,7 +340,7 @@ Repo and report: https://github.com/MichaelCrowe11/crowe-sense (branch integrate
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 12-hax-sosv.md
@@ -371,7 +371,7 @@ Repo and report: https://github.com/MichaelCrowe11/crowe-sense (branch integrate
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 13-lowercarbon-capital.md
@@ -402,7 +402,7 @@ Repo and report: https://github.com/MichaelCrowe11/crowe-sense (branch integrate
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 14-techstars-future-of-food-powered-by-ecolab.md
@@ -433,7 +433,7 @@ Repo and report: https://github.com/MichaelCrowe11/crowe-sense (branch integrate
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 15-y-combinator.md
@@ -464,7 +464,7 @@ Repo and report: https://github.com/MichaelCrowe11/crowe-sense (branch integrate
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 16-elemental-impact.md
@@ -495,7 +495,7 @@ Repo and report: https://github.com/MichaelCrowe11/crowe-sense (branch integrate
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 17-desert-angels.md
@@ -526,7 +526,7 @@ Repo and report: https://github.com/MichaelCrowe11/crowe-sense (branch integrate
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 18-canyon-angels.md
@@ -557,7 +557,7 @@ Repo and report: https://github.com/MichaelCrowe11/crowe-sense (branch integrate
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 19-invest-southwest-venture-madness.md
@@ -586,7 +586,7 @@ Repo: https://github.com/MichaelCrowe11/crowe-sense (branch integrate/2026-09-01
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 20-tallwave-capital.md
@@ -617,7 +617,7 @@ Repo and report: https://github.com/MichaelCrowe11/crowe-sense (branch integrate
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 21-arizona-tech-investors-ati.md
@@ -648,7 +648,7 @@ Repo and report: https://github.com/MichaelCrowe11/crowe-sense (branch integrate
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 22-phx-ventures.md
@@ -679,7 +679,7 @@ Repo and report: https://github.com/MichaelCrowe11/crowe-sense (branch integrate
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 23-az-techcelerator.md
@@ -708,7 +708,7 @@ Repo: https://github.com/MichaelCrowe11/crowe-sense (branch integrate/2026-09-01
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 24-asu-venture-devils.md
@@ -737,7 +737,7 @@ Repo: https://github.com/MichaelCrowe11/crowe-sense (branch integrate/2026-09-01
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 25-usda-sbir-sttr-phase-i-nifa.md
@@ -766,7 +766,7 @@ Repo: https://github.com/MichaelCrowe11/crowe-sense (branch integrate/2026-09-01
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 26-nsf-sbir-phase-i-america-s-seed-fund.md
@@ -795,7 +795,7 @@ Repo: https://github.com/MichaelCrowe11/crowe-sense (branch integrate/2026-09-01
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 27-western-sare-farmer-rancher-grant.md
@@ -824,7 +824,7 @@ Repo: https://github.com/MichaelCrowe11/crowe-sense (branch integrate/2026-09-01
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 28-usda-nifa-afri-agriculture-systems-and-technolog.md
@@ -853,7 +853,7 @@ Repo: https://github.com/MichaelCrowe11/crowe-sense (branch integrate/2026-09-01
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 29-arizona-innovation-challenge-arizona-commerce-au.md
@@ -882,7 +882,7 @@ Repo: https://github.com/MichaelCrowe11/crowe-sense (branch integrate/2026-09-01
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
 ==================================================================
 FILE: 30-arizona-specialty-crop-block-grant-program-azda-.md
@@ -911,5 +911,5 @@ Repo: https://github.com/MichaelCrowe11/crowe-sense (branch integrate/2026-09-01
 
 Michael Crowe
 Crowe Logic, Inc., Phoenix
-michael@southwestmushrooms.com
+michael@crowelogic.com
 
