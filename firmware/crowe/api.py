@@ -55,7 +55,7 @@ def latest(conn: sqlite3.Connection, node_id: str, zone: str, now: float) -> lis
          "ON r.id = m.mid")
     for ts, sensor, channel, value, unit in conn.execute(q):
         metric = metric_for(channel)
-        cand = {"ts": round(_unix(ts), 3), "node": node_id, "zone": zone, "sensor": sensor,
+        cand = {"ts": round(_unix(ts), 3), "node": node_id, "zone": "pi" if sensor == "pi" else zone, "sensor": sensor,
                 "metric": metric, "value": float(value), "unit": unit_for(unit), "quality": "ok"}
         if now - cand["ts"] > STALE_AFTER_S:
             cand["quality"] = "stale"

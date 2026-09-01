@@ -179,7 +179,7 @@ async function load(){
   const zones=Object.keys(S).filter(z=>!z.endsWith("-derived")&&z!=="pi"&&!z.startsWith("hood"));
   for(const t of zones){const s=S[t]||{};const der=S[t+"-derived"]||{};
     h+=`<div class="sec">${t.replace('-',' ')}</div><div class="grid g4">`;
-    for(const m of ["temperature_c","humidity_pct","co2_ppm","vpd_kpa"])if(s[m])h+=tile(m,s[m]);
+    for(const m of ["temperature_c","humidity_pct","co2_ppm","vpd_kpa"]){if(s[m])h+=tile(m,s[m]);else if(der[m])h+=tile(m,der[m]);}
     h+=`</div>`;
     const dchips=[];
     if(der.fruiting_score){const fv=der.fruiting_score.value;
@@ -197,20 +197,20 @@ async function load(){
     h+=`</div>`;
   }
   const hd=S["hood-1"]||{},hde=S["hood-1-derived"]||{};
-  h+=`<div class="sec">flow hood</div><div class="grid g4">`;
+  if(Object.keys(hd).length||Object.keys(hde).length){h+=`<div class="sec">flow hood</div><div class="grid g4">`;
   if(hde.hood_face_velocity_fpm)h+=tile("hood_face_velocity_fpm",hde.hood_face_velocity_fpm);
   if(hde.prefilter_load_pct)h+=tile("prefilter_load_pct",hde.prefilter_load_pct);
   if(hde.prefilter_days_left)h+=tile("prefilter_days_left",hde.prefilter_days_left);
   if(hd.prefilter_dp_pa)h+=tile("prefilter_dp_pa",hd.prefilter_dp_pa);
   h+=`</div>`;
-  if(hde.hood_laminar_ok)h+=`<div style="margin-top:10px">Laminar flow ${boolBadge(hde.hood_laminar_ok,true)}</div>`;
+  if(hde.hood_laminar_ok)h+=`<div style="margin-top:10px">Laminar flow ${boolBadge(hde.hood_laminar_ok,true)}</div>`;}
   const p=S["pi"]||{};
-  h+=`<div class="sec">pi health</div><div class="grid g4">`;
+  if(Object.keys(p).length){h+=`<div class="sec">controller</div><div class="grid g4">`;
   if(p.soc_temp_c)h+=tile("soc_temp_c",p.soc_temp_c);
   if(p.arm_clock_mhz)h+=tile("arm_clock_mhz",p.arm_clock_mhz);
   if(p.core_volts)h+=tile("core_volts",p.core_volts);
   h+=`</div>`;
-  if(p.undervoltage_now)h+=`<div style="margin-top:10px">Undervoltage ${boolBadge(p.undervoltage_now,false)}</div>`;
+  if(p.undervoltage_now)h+=`<div style="margin-top:10px">Undervoltage ${boolBadge(p.undervoltage_now,false)}</div>`;}
   h+=`<div class="foot">Crowe Sense &middot; node ${d.node}${d.zone?" &middot; zone "+d.zone:""} &middot; ${loadCfg().source==="cloud"?"via relay":"direct"} &middot; refresh 15s</div>`;
   document.getElementById('app').innerHTML=h;
   document.getElementById('dot').style.background='#5aa469';
