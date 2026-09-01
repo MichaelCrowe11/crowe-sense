@@ -11,6 +11,8 @@ it's stable, kernel-blessed, and doesn't require dbus.
 
 from __future__ import annotations
 
+import os
+
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -49,6 +51,10 @@ def _classify(iface: str) -> str:
 
 
 def current_uplink(route_text: str | None = None) -> Uplink | None:
+    # Dev override for hosts without /proc/net/route (a Mac on the bench): CROWE_UPLINK_IFACE=en0
+    forced = os.environ.get("CROWE_UPLINK_IFACE")
+    if forced and route_text is None:
+        return Uplink(forced, _classify(forced))
     if route_text is None:
         try:
             route_text = ROUTE_FILE.read_text()
