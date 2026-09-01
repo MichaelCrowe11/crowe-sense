@@ -7,7 +7,7 @@ use the same footage with a different lower-third. Spine picture is rendered onc
 """
 import hashlib, json, os, subprocess, sys
 from PIL import Image, ImageDraw, ImageFont
-HERE = os.path.dirname(os.path.abspath(__file__)); OUT = os.path.join(HERE, "out2"); VOICE = os.path.join(HERE, "out", "voice"); A = os.path.join(HERE, "assets")
+HERE = os.path.dirname(os.path.abspath(__file__)); OUT = os.path.join(HERE, "out2"); VOICE = os.path.join(HERE, os.environ.get("VOICE_DIR", "out/voice")); A = os.path.join(HERE, "assets")
 sys.path.insert(0, HERE)
 import cards
 os.makedirs(OUT, exist_ok=True)
