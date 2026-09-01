@@ -28,10 +28,10 @@ used = set()
 shots = {}
 shots["open"]      = pick("room", 3, used)
 shots["what"]      = [os.path.join(A, "turntable.mp4")] + pick("room", 2, used)
-shots["path"]      = pick("room", 1, used) + [os.path.join(A, "dashboard.mp4")] + pick("bench", 1, used)
-shots["dash"]      = [os.path.join(A, "dashboard.mp4")] + pick("room", 1, used)
-shots["envelope"]  = pick("macro", 3, used)
-shots["proven"]    = [os.path.join(A, "tests.mp4")] + pick("bench", 1, used)
+shots["path"]      = [os.path.join(A, "cli.mp4"), os.path.join(A, "mobile.mp4"), os.path.join(A, "desktop.mp4")]
+shots["dash"]      = [os.path.join(A, "dashboard.mp4")]
+shots["envelope"]  = pick("macro", 1, used) + [os.path.join(A, "envelope.mp4")]
+shots["proven"]    = [os.path.join(A, "tests.mp4"), os.path.join(A, "relay.mp4")]
 shots["notproven"] = pick("room", 3, used, min_motion=0)
 shots["founder"]   = pick("bench", 3, used)
 shots["ask"]       = pick("macro", 2, used) + pick("room", 1, used)
