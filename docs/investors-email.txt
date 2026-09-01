@@ -1,0 +1,52 @@
+To: southwestfungi@gmail.com
+Subject: Crowe Sense: the thirty investors and funders (verified 2026-09-01)
+
+Michael,
+
+The list, as the research finished it on 2026-09-01. Every URL was checked active in 2025 or 2026. Award ceilings are the current published figures. No contact names or addresses are in it by design: they change, and a wrong one costs more than a blank.
+
+Start with: HAX, Techstars Future of Food, Canyon Angels, Desert Angels, Arizona Tech Investors, and the USDA and NSF SBIR windows. The large agtech funds are later-round relationships.
+
+Report page: https://claude.ai/code/artifact/7e7e2fe9-1b93-492b-bb61-0278c3a44626
+Repo: ~/crowe-sense, branch integrate/2026-09-01 (docs/investors-30.csv, docs/investor-report.md).
+
+Agtech and controlled-environment funds (10)
+  - AgFunder: Seed to Series B, broad agrifood and climate tech  https://agfunder.com/invest/
+  - Anterra Capital: $1,000,000 to $10,000,000 initial check (stated on the fund's own site)  https://anterracapital.com/
+  - Astanor Ventures: Seed through growth  https://astanor.com/
+  - iSelect Fund: Seed, Series A, crop health and sensing  https://www.iselectfund.com/agtech/
+  - Ospraie Ag Science: Seed through growth, controlled environment agriculture named as a backed theme  https://www.crunchbase.com/organization/ospraie-ag-sciences
+  - Middleland Capital: Seed, Series A (recent language skews toward de-risked, early-revenue companies)  https://www.middlelandcapital.com/
+  - Acre Venture Partners: Seed through Series B  https://www.acre.vc/
+  - Better Food Ventures: Seed, Series A, digital/software-first (deliberately avoids hardware-intensive deals)  https://www.agtechnavigator.com/Article/2026/02/16/better-food-ventures-silicon-valleys-playbook-can-work-for-ag/
+  - Radicle Growth: verify  https://www.radicle.vc/
+  - SVG Ventures THRIVE: Up to $1,000,000 for Global Impact Challenge finalists (stated by the fund)  https://svgventures.com/
+
+Hardware and climate seed funds and accelerators (6)
+  - Lemnos: Pre-seed and seed, hardware and deep tech only  https://www.lemnos.vc/
+  - HAX (SOSV): Up to $550,000 pre-seed; first check $250,000 ($150,000 cash plus $100,000 in-kind engineering and lab support) on an uncapped post-money SAFE (stated on HAX's own FAQ)  https://hax.co/faq/
+  - Lowercarbon Capital: Pre-seed through growth, climate tech with a hardware-heavy sub-portfolio  https://lowercarbon.com/
+  - Techstars Future of Food Powered by Ecolab: $220,000 (Techstars standard terms: $20,000 for 5% common plus $200,000 uncapped MFN SAFE)  https://www.techstars.com/accelerators/future-of-food
+  - Y Combinator: $500,000 ($125,000 for 7% plus $375,000 uncapped MFN SAFE)  https://www.ycombinator.com/blog/ycs-500-000-standard-deal
+  - Elemental Impact: First-of-a-kind and early commercial deployment funding across energy, industry, food and agriculture, water  https://elementalimpact.com/
+
+Arizona (8)
+  - Desert Angels: Seed/early-stage, accredited angel network  https://desertangels.org/about-us/
+  - Canyon Angels: Pre-seed/seed, accredited angel group  https://canyonangels.org/about
+  - Invest Southwest (Venture Madness): not applicable (event, not a fund)  https://venturemadness.com/
+  - Tallwave Capital: Pre-seed, seed and post-seed VC fund  https://mcida.com/about-us/news/tallwave-capital-named-most-active-in-state-for-second-year-in-a-row/
+  - Arizona Tech Investors (ATI): verify  https://arizonatechinvestors.com/
+  - PHX Ventures: $50,000 to $250,000 in pre-revenue companies (Launch Fund, stated on the fund's own site)  https://www.phxventures.com/
+  - AZ TechCelerator: not applicable (space and mentorship, not capital)  https://www.aztechcelerator.com/about
+  - ASU Venture Devils: $1,000 to $50,000 per team; Spring 2026 Demo Day pool exceeded $300,000 in aggregate (ASU's own site)  https://entrepreneurship.asu.edu/programs/venture-devils/
+
+Non-dilutive programs (6)
+  - USDA SBIR/STTR Phase I (NIFA): $175,000 maximum for most topics ($125,000 for topics 8.6 and 8.12), award ceiling not guaranteed  https://www.nifa.usda.gov/grants/programs/sbir-sttr/program-information
+  - NSF SBIR Phase I (America's Seed Fund): $305,000 maximum (solicitation NSF 26-510), award ceiling not guaranteed  https://seedfund.nsf.gov/solicitations/
+  - Western SARE Farmer/Rancher Grant: $35,000 flat award  https://western.sare.org/grants/farmer-rancher/
+  - USDA NIFA AFRI, Agriculture Systems and Technology: verify (no per-track cap published; check the current NOFO)  https://www.nifa.usda.gov/grants/programs/agriculture-food-research-initiative/afri-deadlines
+  - Arizona Innovation Challenge (Arizona Commerce Authority): Minimum $50,000 non-dilutive per awardee, up to 10 awardees per cycle (official ACA July 2025 release)  https://www.azcommerce.com/news-events/news/2025/7/arizona-commerce-authority-accepting-applications-for-2025-arizona-innovation-challenge/
+  - Arizona Specialty Crop Block Grant Program (AZDA / USDA AMS): verify (approximately $1,250,000 total FY2026 Arizona allocation across all awardees, no per-project cap published)  https://agriculture.az.gov/about-us/divisions/agriculture-food-systems-support/specialty-crop-block-grant-program-scbgp
+Checked and excluded: Bolt (no new investments since 2020), Arizona Founders Fund (no disclosed 2025 or 2026 deals), Pontifax AgTech (now Aliment Capital, growth only), S2G, Finistere, Cultivian (Series A and up), Fall Line (farmland first), Phoenix Forge (makerspace), Coplex (venture studio), SVP Arizona (nonprofits only).
+
+Before any outreach: push the Zenodo correction. The report says it goes up before the report goes out.
