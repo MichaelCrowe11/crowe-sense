@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sense.crowelogic.com/contracts/reading.v1.json",
+  "title": "Crowe Sense reading v1",
+  "type": "object",
+  "required": ["ts", "node", "zone", "sensor", "metric", "value", "unit"],
+  "additionalProperties": false,
+  "properties": {
+    "ts": { "type": "number", "minimum": 1600000000 },
+    "node": { "type": "string", "pattern": "^cs-[0-9a-f]{6}$" },
+    "zone": { "type": "string", "minLength": 1, "maxLength": 32 },
+    "sensor": { "type": "string", "enum": ["scd41", "sht45", "bme688", "veml7700", "sdp810", "pi", "derived", "manual"] },
+    "metric": { "type": "string", "pattern": "^[a-z][a-z0-9_]{1,40}$" },
+    "value": { "type": "number" },
+    "unit": { "type": "string", "maxLength": 12 },
+    "quality": { "type": "string", "enum": ["ok", "warming", "stale", "est", "fault"], "default": "ok" }
+  }
+}
