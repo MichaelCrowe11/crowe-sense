@@ -5,7 +5,15 @@ using the kit's private key. A 2xx from /v1/ingest and rows in D1 prove the path
 Usage: .venv/bin/python ../kits/bench_test.py ../kits/harrison-lf-01/etc-crowe/node.toml
 """
 import os, sys, time, tempfile, sqlite3, re, pathlib, datetime
-import httpx
+import httpx, socket
+# BENCH_RESOLVE=host:ip pins one hostname to an IP at the Python level (SNI and the certificate stay
+# correct) for a machine whose resolver has a stale negative cache for a freshly created record.
+_pin = os.environ.get("BENCH_RESOLVE", "")
+if _pin:
+    _h, _ip = _pin.split(":", 1); _orig = socket.getaddrinfo
+    def _gai(host, *a, **k):
+        return _orig(_ip, *a, **k) if host == _h else _orig(host, *a, **k)
+    socket.getaddrinfo = _gai
 kit_toml = pathlib.Path(sys.argv[1]).resolve()
 tmp = pathlib.Path(tempfile.mkdtemp(prefix="crowe-bench-"))
 toml = kit_toml.read_text()
