@@ -33,3 +33,7 @@ app/src-tauri/gen/apple/Externals/
 app/src-tauri/gen/apple/build/
 app/src-tauri/gen/apple/*.xcodeproj/xcuserdata/
 app/src-tauri/gen/apple/*.xcodeproj/project.xcworkspace/xcuserdata/
+film/out/
+film/assets/cad-*.stl
+film/assets/report-top.png
+film/__pycache__/

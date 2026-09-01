@@ -1,0 +1,35 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#F5F2EB}canvas{display:block}</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+</head><body><script>
+// STLLoader (binary + ascii), inlined so no extra host is needed.
+function parseSTL(buf){const dv=new DataView(buf);const n=dv.getUint32(80,true);const isBin=(84+n*50===buf.byteLength);const g=new THREE.BufferGeometry();
+ if(isBin){const pos=new Float32Array(n*9),nor=new Float32Array(n*9);for(let i=0;i<n;i++){const o=84+i*50;const nx=dv.getFloat32(o,true),ny=dv.getFloat32(o+4,true),nz=dv.getFloat32(o+8,true);for(let v=0;v<3;v++){const p=o+12+v*12;pos.set([dv.getFloat32(p,true),dv.getFloat32(p+4,true),dv.getFloat32(p+8,true)],i*9+v*3);nor.set([nx,ny,nz],i*9+v*3);}}
+  g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('normal',new THREE.BufferAttribute(nor,3));}
+ else{const t=new TextDecoder().decode(buf);const vs=[];const re=/vertex\s+([-\d.eE+]+)\s+([-\d.eE+]+)\s+([-\d.eE+]+)/g;let m;while((m=re.exec(t)))vs.push(+m[1],+m[2],+m[3]);g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(vs),3));g.computeVertexNormals();}
+ return g;}
+async function load(u){const r=await fetch(u);return parseSTL(await r.arrayBuffer());}
+(async()=>{
+ const W=2400,H=1800;const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setSize(W,H);renderer.setPixelRatio(1);
+ renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;document.body.appendChild(renderer.domElement);
+ const scene=new THREE.Scene();scene.background=new THREE.Color('#F5F2EB');
+ const cam=new THREE.PerspectiveCamera(30,W/H,1,2000);
+ const petg=new THREE.MeshPhysicalMaterial({color:'#2A2824',roughness:0.55,metalness:0.05,clearcoat:0.25,clearcoatRoughness:0.5});
+ const gold=new THREE.MeshPhysicalMaterial({color:'#C9A227',roughness:0.35,metalness:0.6,clearcoat:0.4});
+ // the assembled model, split by height: everything above the lid is the louvered head (gold)
+ const g=await load('cad-all.stl');g.computeVertexNormals();g.computeBoundingBox();const zmax=g.boundingBox.max.z;const cut=zmax-36;
+ const pos=g.attributes.position.array;const idxHead=[],idxBody=[];
+ for(let i=0;i<pos.length;i+=9){const cz=(pos[i+2]+pos[i+5]+pos[i+8])/3;(cz>cut?idxHead:idxBody).push(i/3,i/3+1,i/3+2);}
+ g.setIndex(idxBody.concat(idxHead));g.clearGroups();g.addGroup(0,idxBody.length,0);g.addGroup(idxBody.length,idxHead.length,1);
+ const group=new THREE.Group();const m=new THREE.Mesh(g,[petg,gold]);m.castShadow=true;m.receiveShadow=true;group.add(m);
+ // OpenSCAD is z-up; three is y-up
+ group.rotation.x=-Math.PI/2;scene.add(group);
+ const box=new THREE.Box3().setFromObject(group);const c=box.getCenter(new THREE.Vector3());const size=box.getSize(new THREE.Vector3());group.position.sub(c);
+ const floor=new THREE.Mesh(new THREE.PlaneGeometry(2000,2000),new THREE.ShadowMaterial({opacity:0.22}));floor.rotation.x=-Math.PI/2;floor.position.y=-size.y/2;floor.receiveShadow=true;scene.add(floor);
+ const key=new THREE.DirectionalLight('#fff6e6',2.4);key.position.set(180,260,200);key.castShadow=true;key.shadow.mapSize.set(2048,2048);const d=220;Object.assign(key.shadow.camera,{left:-d,right:d,top:d,bottom:-d,near:10,far:900});key.shadow.radius=6;scene.add(key);
+ const fill=new THREE.DirectionalLight('#dfe8ff',0.9);fill.position.set(-260,120,120);scene.add(fill);
+ const rim=new THREE.DirectionalLight('#ffffff',1.2);rim.position.set(-80,200,-260);scene.add(rim);
+ scene.add(new THREE.HemisphereLight('#fffaf0','#b9ad98',0.55));
+ const R=Math.max(size.x,size.y,size.z)*1.9;cam.position.set(R*0.72,R*0.46,R*0.74);cam.lookAt(0,-size.y*0.05,0);
+ renderer.render(scene,cam);document.title='rendered '+size.x.toFixed(0)+'x'+size.y.toFixed(0)+'x'+size.z.toFixed(0);
+})();
+</script></body></html>
