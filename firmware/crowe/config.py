@@ -24,15 +24,23 @@ class S3Config:
     endpoint_url: str | None = None
 
 
+DEFAULT_SENSORS = ("scd41", "sht45", "bme688", "veml7700", "pi")
+DEFAULT_RELAY = "https://sense.crowelogic.com"
+
+
 @dataclass(frozen=True, slots=True)
 class NodeConfig:
     node_id: str
     site: str
     storage_mount: Path
-    s3: S3Config
+    s3: S3Config | None
     sampler_period_overrides: dict[str, float]
     manifest_url: str
     private_key_path: Path
+    zone: str = ""
+    relay_url: str = ""
+    sensors_enabled: tuple[str, ...] = DEFAULT_SENSORS
+    api_port: int = 8078
 
     @property
     def db_path(self) -> Path:
@@ -54,7 +62,9 @@ def load() -> NodeConfig:
     with path.open("rb") as f:
         data = tomllib.load(f)
 
-    s3 = data["s3"]
+    s3 = data.get("s3")
+    relay = data.get("relay", {})
+    sensors = data.get("sensors", {})
     return NodeConfig(
         node_id=data["node_id"],
         site=data["site"],
@@ -64,10 +74,14 @@ def load() -> NodeConfig:
             prefix=s3.get("prefix", ""),
             region=s3.get("region", "us-east-1"),
             endpoint_url=s3.get("endpoint_url"),
-        ),
+        ) if s3 and s3.get("bucket") else None,
         sampler_period_overrides=data.get("sampler", {}).get("periods", {}),
         manifest_url=data.get("manifest_url", ""),
         private_key_path=Path(data.get("private_key_path", "/etc/crowe/node.key")),
+        zone=data.get("zone") or data["node_id"],
+        relay_url=str(relay.get("url", "")).rstrip("/"),
+        sensors_enabled=tuple(sensors.get("enabled", DEFAULT_SENSORS)),
+        api_port=int(data.get("api", {}).get("port", 8078)),
     )
 
 

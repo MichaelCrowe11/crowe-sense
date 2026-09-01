@@ -1,0 +1,828 @@
+From ea5224cf750701234cb3b15b04fa3a3eea29d177 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 31 Aug 2026 23:54:16 -0700
+Subject: [PATCH] feat(cli): crowe sense reads the sensor node, direct or
+ through the relay
+
+The node and the relay serve one contract (crowe-sense/contracts/telemetry-v1.md),
+so the CLI carries one resolver, endpoint(), and every subcommand goes through it:
+direct mode uses the contract paths verbatim, cloud mode nests them under
+/v1/nodes/{node} on the relay and carries the Crowe ID bearer.
+
+  crowe sense use direct http://100.123.229.57:8078
+  crowe sense use cloud cs-a1b2c3
+  crowe sense status | latest | history --metric co2_ppm --hours 24
+  crowe sense pair cs-a1b2c3 <pubkey> --zone tent-1 ; crowe sense nodes
+  crowe sense check --hours 72   (runs the analysis package's sense_check.py)
+
+No new dependencies (urllib, sqlite3, click, rich). The group's help line names
+"the sensor node" rather than the product so a customer profile's --help stays
+theirs; cli/commands/sense.py joins the list the branding test greps for a
+hardcoded `crowe-logic login`. Tests run against a stub server that answers as
+both a node and a relay.
+
+Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_013PpzVWHUD5jhmo5Vcifg87
+---
+ cli/commands/sense.py          | 400 +++++++++++++++++++++++++++++++++
+ cli/crowe_logic.py             |   2 +
+ tests/test_profile_branding.py |   1 +
+ tests/test_sense_cmd.py        | 347 ++++++++++++++++++++++++++++
+ 4 files changed, 750 insertions(+)
+ create mode 100644 cli/commands/sense.py
+ create mode 100644 tests/test_sense_cmd.py
+
+diff --git a/cli/commands/sense.py b/cli/commands/sense.py
+new file mode 100644
+index 00000000..02ec34f6
+--- /dev/null
++++ b/cli/commands/sense.py
+@@ -0,0 +1,400 @@
++"""``crowe sense``: read a Crowe Sense node, directly or through the relay.
++
++The node and the relay serve one contract (crowe-sense/contracts/telemetry-v1.md):
++``/health``, ``/api/data``, ``/v1/latest``, ``/v1/history`` on the node, and the
++same reads under ``/v1/nodes/{node}`` on the relay behind a Crowe ID bearer.
++``endpoint()`` is the only place that difference lives.
++"""
++
++import json
++import os
++import sqlite3
++import subprocess
++import sys
++import tempfile
++import time
++import urllib.error
++import urllib.parse
++import urllib.request
++
++import click
++from rich import box
++from rich.table import Table
++
++from cli.console_io import console
++from cli.profile import command as _cmd
++
++DEFAULT_RELAY = "https://sense.crowelogic.com"
++CONFIG_ENV = "CROWE_SENSE_CONFIG"
++ANALYSIS_ENV = "CROWE_SENSE_ANALYSIS"
++DEFAULT_ANALYSIS = "~/crowe-sense/analysis/sense_check.py"
++TIMEOUT_S = 10.0
++CHECK_METRICS = ("temperature_c", "humidity_pct", "co2_ppm")
++BARS = "▁▂▃▄▅▆▇█"
++
++
++class SenseError(Exception):
++    """A failure the command reports in one line and exits 1 on."""
++
++
++# ── config ───────────────────────────────────────────────────────────────────
++
++
++def config_path() -> str:
++    return os.environ.get(CONFIG_ENV) or os.path.expanduser("~/.crowe-logic/sense.json")
++
++
++def load_config() -> dict:
++    try:
++        with open(config_path()) as f:
++            return json.load(f)
++    except (FileNotFoundError, json.JSONDecodeError):
++        return {}
++
++
++def save_config(cfg: dict) -> str:
++    path = config_path()
++    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
++    with open(path, "w") as f:
++        json.dump(cfg, f, indent=2)
++    return path
++
++
++def _no_node() -> SenseError:
++    c = _cmd()
++    return SenseError(
++        f"No node configured. Run `{c} sense use direct <url>` "
++        f"or `{c} sense use cloud <node-id>`."
++    )
++
++
++def endpoint(cfg: dict, path: str) -> str:
++    """Resolve a contract path against the configured source.
++
++    direct: ``<url><path>`` as written in the contract.
++    cloud:  ``<relay>/v1/nodes/<node><path minus a leading /v1>``, so
++    ``/v1/latest`` becomes ``/v1/nodes/cs-abc123/latest`` while ``/health`` and
++    ``/api/data`` keep their names.
++    """
++    source = cfg.get("source")
++    if source == "direct" and cfg.get("url"):
++        return cfg["url"].rstrip("/") + path
++    if source == "cloud" and cfg.get("node"):
++        relay = (cfg.get("relay") or DEFAULT_RELAY).rstrip("/")
++        tail = path[3:] if path.startswith("/v1/") else path
++        return f"{relay}/v1/nodes/{cfg['node']}{tail}"
++    raise _no_node()
++
++
++def relay_base(cfg: dict, relay: str | None) -> str:
++    return (relay or cfg.get("relay") or DEFAULT_RELAY).rstrip("/")
++
++
++# ── http ─────────────────────────────────────────────────────────────────────
++
++
++def bearer() -> str:
++    from cli import auth
++
++    try:
++        return auth.current_access_token()
++    except auth.NotLoggedIn:
++        raise SenseError(f"Not signed in to Crowe ID. Run `{_cmd()} login`.")
++
++
++def _request(url: str, token: str | None = None, body: dict | None = None) -> dict | list:
++    headers = {"accept": "application/json"}
++    data = None
++    if body is not None:
++        data = json.dumps(body).encode()
++        headers["content-type"] = "application/json"
++    if token:
++        headers["authorization"] = f"Bearer {token}"
++    req = urllib.request.Request(url, data=data, headers=headers, method="POST" if body is not None else "GET")
++    try:
++        with urllib.request.urlopen(req, timeout=TIMEOUT_S) as resp:
++            raw = resp.read()
++    except urllib.error.HTTPError as e:
++        raw = e.read()
++        try:
++            err = json.loads(raw)
++            detail = f"{err.get('error', e.code)}: {err.get('detail', '')}".rstrip(": ")
++        except (ValueError, AttributeError):
++            detail = f"{e.code} {e.reason}"
++        raise SenseError(f"{detail} ({url})")
++    except urllib.error.URLError as e:
++        raise SenseError(f"unreachable: {e.reason} ({url})")
++    except TimeoutError:
++        raise SenseError(f"unreachable: timed out after {TIMEOUT_S:.0f}s ({url})")
++    try:
++        return json.loads(raw)
++    except ValueError:
++        raise SenseError(f"not JSON from {url}")
++
++
++def fetch(cfg: dict, path: str) -> dict | list:
++    """A contract read against the configured source; cloud reads carry the bearer."""
++    url = endpoint(cfg, path)
++    token = bearer() if cfg.get("source") == "cloud" else None
++    return _request(url, token)
++
++
++# ── rendering ────────────────────────────────────────────────────────────────
++
++
++def _table(title: str, *cols: str) -> Table:
++    t = Table(title=title, box=box.SIMPLE_HEAD, border_style="#bfa669", title_style="bold #bfa669", padding=(0, 1))
++    for c in cols:
++        t.add_column(c)
++    return t
++
++
++def _age(seconds: float | None) -> str:
++    if seconds is None:
++        return "-"
++    seconds = max(0.0, float(seconds))
++    if seconds < 90:
++        return f"{seconds:.0f}s"
++    if seconds < 5400:
++        return f"{seconds / 60:.0f}m"
++    if seconds < 172800:
++        return f"{seconds / 3600:.1f}h"
++    return f"{seconds / 86400:.1f}d"
++
++
++def _num(v) -> str:
++    try:
++        v = float(v)
++    except (TypeError, ValueError):
++        return str(v)
++    return f"{v:,.0f}" if abs(v) >= 100 else f"{v:.2f}"
++
++
++def _stamp(ts: float) -> str:
++    return time.strftime("%Y-%m-%d %H:%M", time.localtime(float(ts)))
++
++
++def sparkline(values: list[float], width: int = 60) -> str:
++    """Plain block-character sparkline; downsampled by bucket mean to ``width``."""
++    vals = [float(v) for v in values if v is not None]
++    if not vals:
++        return ""
++    if len(vals) > width:
++        step = len(vals) / width
++        vals = [
++            sum(vals[int(i * step):max(int(i * step) + 1, int((i + 1) * step))])
++            / max(1, int((i + 1) * step) - int(i * step))
++            for i in range(width)
++        ]
++    lo, hi = min(vals), max(vals)
++    span = hi - lo
++    if span <= 0:
++        return BARS[3] * len(vals)
++    return "".join(BARS[min(7, int((v - lo) / span * 7.999))] for v in vals)
++
++
++def _fail(e: Exception) -> None:
++    console.print(f"  [bold red]{e}[/bold red]")
++    sys.exit(1)
++
++
++# ── commands ─────────────────────────────────────────────────────────────────
++
++
++@click.group(name="sense")
++def sense_cmd():
++    """The sensor node: live readings, history, pairing, and the practice check."""
++
++
++@sense_cmd.command(name="use")
++@click.argument("mode", type=click.Choice(["direct", "cloud"]))
++@click.argument("target")
++@click.option("--relay", default=None, help="Relay base URL for cloud mode.")
++def use_cmd(mode: str, target: str, relay: str | None):
++    """Point this machine at a node: `use direct http://host:8078` or `use cloud cs-a1b2c3`."""
++    cfg = load_config()
++    if mode == "direct":
++        if not target.startswith(("http://", "https://")):
++            _fail(SenseError("direct needs a URL such as http://100.123.229.57:8078"))
++        cfg.update({"source": "direct", "url": target.rstrip("/")})
++    else:
++        cfg.update({"source": "cloud", "node": target, "relay": relay_base(cfg, relay)})
++    path = save_config(cfg)
++    where = cfg["url"] if mode == "direct" else f"{cfg['node']} via {cfg['relay']}"
++    console.print(f"  Crowe Sense source: [#bfa669]{mode}[/#bfa669] {where}")
++    console.print(f"  [dim]saved to {path}[/dim]")
++
++
++@sense_cmd.command(name="status")
++def status_cmd():
++    """Is the node up? Reads /health; exits 1 when it is down or unreachable."""
++    cfg = load_config()
++    try:
++        h = fetch(cfg, "/health")
++    except SenseError as e:
++        _fail(e)
++    ok = bool(h.get("ok"))
++    t = _table("Crowe Sense", "Field", "Value")
++    t.add_row("node", str(h.get("node", "-")))
++    t.add_row("zone", str(h.get("zone", "-")))
++    t.add_row("readings", _num(h.get("readings", 0)))
++    t.add_row("last reading", _age(h.get("age_s")) + " ago" if h.get("age_s") is not None else "-")
++    t.add_row("uptime", _age(h.get("uptime_s")))
++    t.add_row("version", str(h.get("version", "-")))
++    t.add_row("state", "[#8fbf8f]ok[/#8fbf8f]" if ok else "[bold red]down[/bold red]")
++    console.print(t)
++    if not ok:
++        sys.exit(1)
++
++
++@sense_cmd.command(name="latest")
++def latest_cmd():
++    """The newest reading of every zone and metric."""
++    cfg = load_config()
++    try:
++        rows = fetch(cfg, "/v1/latest")
++    except SenseError as e:
++        _fail(e)
++    if not isinstance(rows, list) or not rows:
++        console.print("  no readings yet")
++        return
++    now = time.time()
++    zones: dict[str, list[dict]] = {}
++    for r in rows:
++        zones.setdefault(str(r.get("zone", "?")), []).append(r)
++    for zone in sorted(zones):
++        t = _table(zone, "Metric", "Value", "Unit", "Quality", "Age")
++        for r in sorted(zones[zone], key=lambda x: str(x.get("metric"))):
++            t.add_row(
++                str(r.get("metric")),
++                _num(r.get("value")),
++                str(r.get("unit", "")),
++                str(r.get("quality", "ok")),
++                _age(now - float(r.get("ts", now))),
++            )
++        console.print(t)
++
++
++@sense_cmd.command(name="history")
++@click.option("--metric", default="co2_ppm", show_default=True)
++@click.option("--zone", default=None, help="Zone label; the node default when omitted.")
++@click.option("--hours", default=24.0, show_default=True, type=float)
++@click.option("--step", default=300, show_default=True, type=int, help="Bucket width in seconds.")
++def history_cmd(metric: str, zone: str | None, hours: float, step: int):
++    """One metric over a window: min, mean, max and a sparkline."""
++    cfg = load_config()
++    q = {"metric": metric, "hours": hours, "step": step}
++    if zone:
++        q["zone"] = zone
++    try:
++        h = fetch(cfg, "/v1/history?" + urllib.parse.urlencode(q))
++    except SenseError as e:
++        _fail(e)
++    points = [p for p in h.get("points", []) if p and p[1] is not None]
++    unit = h.get("unit", "")
++    label = f"{h.get('zone') or zone or ''} {h.get('metric', metric)}".strip()
++    if not points:
++        console.print(f"  {label}: no points in the last {hours:g}h")
++        return
++    vals = [float(p[1]) for p in points]
++    console.print(f"  [#bfa669]{label}[/#bfa669]  {len(points)} points, {hours:g}h, step {step}s")
++    console.print(f"  min {_num(min(vals))}  mean {_num(sum(vals) / len(vals))}  max {_num(max(vals))} {unit}")
++    console.print(f"  {sparkline(vals)}")
++    console.print(f"  [dim]{_stamp(points[0][0])} to {_stamp(points[-1][0])}[/dim]")
++
++
++@sense_cmd.command(name="nodes")
++@click.option("--relay", default=None, help="Relay base URL.")
++def nodes_cmd(relay: str | None):
++    """The nodes paired to this Crowe ID, from the relay."""
++    cfg = load_config()
++    try:
++        rows = _request(f"{relay_base(cfg, relay)}/v1/nodes", bearer())
++    except SenseError as e:
++        _fail(e)
++    if not rows:
++        console.print(f"  No nodes paired. Pair one with `{_cmd()} sense pair <node> <public-key>`.")
++        return
++    now = time.time()
++    t = _table("Paired nodes", "Node", "Zone", "Label", "Last seen")
++    for r in rows:
++        seen = r.get("last_seen_ts")
++        t.add_row(str(r.get("node") or r.get("node_id")), str(r.get("zone", "")), str(r.get("label", "")), (_age(now - float(seen)) + " ago") if seen else "never")
++    console.print(t)
++
++
++@sense_cmd.command(name="pair")
++@click.argument("node")
++@click.argument("public_key")
++@click.option("--zone", required=True, help="Where the sensor head sits, e.g. tent-1.")
++@click.option("--label", default="", help="A name for people, e.g. North tent.")
++@click.option("--relay", default=None, help="Relay base URL.")
++def pair_cmd(node: str, public_key: str, zone: str, label: str, relay: str | None):
++    """Register a node's public key to this Crowe ID on the relay."""
++    cfg = load_config()
++    body = {"node": node, "public_key": public_key, "zone": zone, "label": label}
++    try:
++        out = _request(f"{relay_base(cfg, relay)}/v1/nodes", bearer(), body)
++    except SenseError as e:
++        _fail(e)
++    console.print(f"  paired [#bfa669]{out.get('node', node)}[/#bfa669] as {zone}" + (f" ({label})" if label else ""))
++    if cfg.get("source") != "cloud":
++        console.print(f"  [dim]read it with `{_cmd()} sense use cloud {node}`[/dim]")
++
++
++def build_check_db(cfg: dict, hours: float, zones: list[str], step: int = 60) -> tuple[str, int]:
++    """Pull the check metrics for each zone into a SQLite file sense_check.py can read."""
++    fd, path = tempfile.mkstemp(prefix="crowe-sense-", suffix=".db")
++    os.close(fd)
++    con = sqlite3.connect(path)
++    con.execute("CREATE TABLE readings (epoch REAL, metric TEXT, value REAL, sensor TEXT)")
++    written = 0
++    for zone in zones:
++        for metric in CHECK_METRICS:
++            q = urllib.parse.urlencode({"metric": metric, "zone": zone, "hours": hours, "step": step})
++            h = fetch(cfg, "/v1/history?" + q)
++            rows = [(float(p[0]), metric, float(p[1]), zone) for p in h.get("points", []) if p and p[1] is not None]
++            con.executemany("INSERT INTO readings VALUES (?,?,?,?)", rows)
++            written += len(rows)
++    con.commit()
++    con.close()
++    return path, written
++
++
++@sense_cmd.command(name="check")
++@click.option("--hours", default=72.0, show_default=True, type=float)
++@click.option("--zone", "only_zone", default=None, help="Check one zone instead of every zone the node reports.")
++@click.option("--stage", default=None, help="Override the stage log (passed through to sense_check.py).")
++def check_cmd(hours: float, only_zone: str | None, stage: str | None):
++    """Judge the last window against documented practice (needs the analysis checkout)."""
++    script = os.path.expanduser(os.environ.get(ANALYSIS_ENV) or DEFAULT_ANALYSIS)
++    if not os.path.exists(script):
++        console.print(f"  The practice check lives in the crowe-sense analysis package, expected at {script}.")
++        console.print("  Clone github.com/MichaelCrowe11/crowe-sense and run this again.")
++        sys.exit(2)
++    cfg = load_config()
++    try:
++        latest = fetch(cfg, "/v1/latest")
++        zones = sorted({str(r.get("zone")) for r in latest if r.get("zone")})
++        if only_zone:
++            zones = [only_zone]
++        if not zones:
++            raise SenseError("the node reports no zones yet")
++        db, n = build_check_db(cfg, hours, zones)
++    except SenseError as e:
++        _fail(e)
++    console.print(f"  [dim]{n} points for {', '.join(zones)} in {db}[/dim]")
++    worst = 0
++    for zone in zones:
++        argv = [sys.executable, script, "--db", db, "--hours", str(hours), "--zone", zone]
++        if stage:
++            argv += ["--stage", stage]
++        # Captured rather than inherited so the report lands in the same stream
++        # as the rest of the command (and in CliRunner's output under test).
++        res = subprocess.run(argv, cwd=os.path.dirname(script), capture_output=True, text=True)
++        if res.stdout:
++            click.echo(res.stdout.rstrip("\n"))
++        if res.stderr:
++            click.echo(res.stderr.rstrip("\n"), err=True)
++        worst = max(worst, res.returncode)
++    sys.exit(worst)
+diff --git a/cli/crowe_logic.py b/cli/crowe_logic.py
+index aa9374c1..d7e34995 100755
+--- a/cli/crowe_logic.py
++++ b/cli/crowe_logic.py
+@@ -243,6 +243,7 @@ from cli.commands.doctor import (
+     doctor_cmd,
+     synapse_doctor,
+ )
++from cli.commands.sense import sense_cmd
+ from cli.commands.internal import (
+     internal_agents_cmd,
+     internal_cmd,
+@@ -331,6 +332,7 @@ main.add_command(update_cmd)
+ main.add_command(upgrade_cmd)
+ main.add_command(billing_cmd)
+ main.add_command(doctor_cmd)
++main.add_command(sense_cmd)
+ main.add_command(synapse_doctor)
+ main.add_command(ensemble)
+ main.add_command(serve)
+diff --git a/tests/test_profile_branding.py b/tests/test_profile_branding.py
+index 2269f77e..7db14d90 100644
+--- a/tests/test_profile_branding.py
++++ b/tests/test_profile_branding.py
+@@ -206,6 +206,7 @@ def test_no_user_facing_string_hardcodes_another_products_command():
+         "cli/commands/estate.py",
+         "cli/commands/internal.py",
+         "cli/commands/oneshot.py",
++        "cli/commands/sense.py",
+     ):
+         for i, line in enumerate((repo / rel).read_text().splitlines(), 1):
+             stripped = line.strip()
+diff --git a/tests/test_sense_cmd.py b/tests/test_sense_cmd.py
+new file mode 100644
+index 00000000..00564003
+--- /dev/null
++++ b/tests/test_sense_cmd.py
+@@ -0,0 +1,347 @@
++"""``crowe sense`` against a stub node and a stub relay speaking telemetry v1."""
++
++import json
++import os
++import sqlite3
++import threading
++import time
++from http.server import BaseHTTPRequestHandler, HTTPServer
++from urllib.parse import parse_qs, urlparse
++
++import pytest
++from click.testing import CliRunner
++
++from cli.commands import sense
++from cli.commands.sense import endpoint, sense_cmd, sparkline
++
++NOW = time.time()
++
++
++def _health(ok=True):
++    return {"ok": ok, "node": "cs-a1b2c3", "zone": "tent-1", "readings": 5048780,
++            "last_ts": NOW - 4.2, "age_s": 4.2 if ok else 900.0, "uptime_s": 86400, "version": "0.2.0"}
++
++
++LATEST = [
++    {"ts": NOW - 5, "node": "cs-a1b2c3", "zone": "tent-1", "sensor": "scd41", "metric": "co2_ppm", "value": 812.0, "unit": "ppm", "quality": "ok"},
++    {"ts": NOW - 5, "node": "cs-a1b2c3", "zone": "tent-1", "sensor": "sht45", "metric": "temperature_c", "value": 21.37, "unit": "C", "quality": "ok"},
++    {"ts": NOW - 5, "node": "cs-a1b2c3", "zone": "tent-1", "sensor": "sht45", "metric": "humidity_pct", "value": 88.1, "unit": "%", "quality": "ok"},
++    {"ts": NOW - 5, "node": "cs-a1b2c3", "zone": "hood-1", "sensor": "sdp810", "metric": "prefilter_dp_pa", "value": 41.0, "unit": "Pa", "quality": "ok"},
++]
++
++
++def _history(q):
++    metric = q.get("metric", ["co2_ppm"])[0]
++    zone = q.get("zone", ["tent-1"])[0]
++    pts = [[NOW - 3600 + i * 300, 700.0 + (i % 5) * 40] for i in range(12)]
++    return {"metric": metric, "zone": zone, "unit": "ppm", "points": pts}
++
++
++class Stub:
++    """One server that answers as a node (direct paths) and as a relay (per-node paths)."""
++
++    def __init__(self, ok=True):
++        self.ok = ok
++        self.seen = []
++        self.nodes = []
++        outer = self
++
++        class H(BaseHTTPRequestHandler):
++            def log_message(self, *a):
++                pass
++
++            def _send(self, code, body):
++                raw = json.dumps(body).encode()
++                self.send_response(code)
++                self.send_header("content-type", "application/json")
++                self.send_header("content-length", str(len(raw)))
++                self.end_headers()
++                self.wfile.write(raw)
++
++            def do_GET(self):
++                u = urlparse(self.path)
++                q = parse_qs(u.query)
++                outer.seen.append((self.command, u.path, {k.lower(): v for k, v in self.headers.items()}))
++                p = u.path
++                if p.startswith("/v1/nodes/cs-a1b2c3/"):
++                    p = p[len("/v1/nodes/cs-a1b2c3"):]
++                    if p in ("/latest", "/history"):
++                        p = "/v1" + p
++                    if "authorization" not in self.headers:
++                        return self._send(401, {"error": "unauthorized", "detail": "bearer required"})
++                if p == "/health":
++                    return self._send(200, _health(outer.ok))
++                if p == "/v1/latest":
++                    return self._send(200, LATEST)
++                if p == "/v1/history":
++                    return self._send(200, _history(q))
++                if p == "/v1/nodes":
++                    if "authorization" not in self.headers:
++                        return self._send(401, {"error": "unauthorized", "detail": "bearer required"})
++                    return self._send(200, outer.nodes)
++                self._send(404, {"error": "not_found", "detail": p})
++
++            def do_POST(self):
++                n = int(self.headers.get("content-length", 0))
++                body = json.loads(self.rfile.read(n) or b"{}")
++                outer.seen.append((self.command, self.path, {k.lower(): v for k, v in self.headers.items()}, body))
++                if "authorization" not in self.headers:
++                    return self._send(401, {"error": "unauthorized", "detail": "bearer required"})
++                if self.path == "/v1/nodes":
++                    outer.nodes.append({"node": body["node"], "zone": body["zone"], "label": body.get("label", ""), "last_seen_ts": None})
++                    return self._send(201, {"node": body["node"]})
++                self._send(404, {"error": "not_found", "detail": self.path})
++
++        self.srv = HTTPServer(("127.0.0.1", 0), H)
++        self.url = f"http://127.0.0.1:{self.srv.server_port}"
++        threading.Thread(target=self.srv.serve_forever, daemon=True).start()
++
++    def close(self):
++        self.srv.shutdown()
++
++
++@pytest.fixture
++def stub():
++    s = Stub()
++    yield s
++    s.close()
++
++
++@pytest.fixture
++def isolated(tmp_path, monkeypatch):
++    """No real ~/.crowe-logic, no real Crowe ID session."""
++    monkeypatch.setenv("HOME", str(tmp_path))
++    monkeypatch.setenv(sense.CONFIG_ENV, str(tmp_path / "sense.json"))
++    monkeypatch.setenv(sense.ANALYSIS_ENV, str(tmp_path / "missing" / "sense_check.py"))
++    from cli import auth
++    monkeypatch.setattr(auth, "STORE_PATH", str(tmp_path / "auth.json"))
++    return tmp_path
++
++
++def _run(*args):
++    return CliRunner().invoke(sense_cmd, list(args))
++
++
++# ── endpoint() ───────────────────────────────────────────────────────────────
++
++
++def test_endpoint_direct_uses_contract_paths_verbatim():
++    cfg = {"source": "direct", "url": "http://100.123.229.57:8078/"}
++    assert endpoint(cfg, "/health") == "http://100.123.229.57:8078/health"
++    assert endpoint(cfg, "/v1/latest") == "http://100.123.229.57:8078/v1/latest"
++    assert endpoint(cfg, "/v1/history?metric=co2_ppm") == "http://100.123.229.57:8078/v1/history?metric=co2_ppm"
++    assert endpoint(cfg, "/api/data?hours=6") == "http://100.123.229.57:8078/api/data?hours=6"
++
++
++def test_endpoint_cloud_nests_under_the_node_and_drops_the_v1_prefix():
++    cfg = {"source": "cloud", "node": "cs-a1b2c3", "relay": "https://sense.crowelogic.com/"}
++    base = "https://sense.crowelogic.com/v1/nodes/cs-a1b2c3"
++    assert endpoint(cfg, "/health") == base + "/health"
++    assert endpoint(cfg, "/v1/latest") == base + "/latest"
++    assert endpoint(cfg, "/v1/history?metric=co2_ppm&hours=24") == base + "/history?metric=co2_ppm&hours=24"
++    assert endpoint(cfg, "/api/data?hours=6") == base + "/api/data?hours=6"
++
++
++def test_endpoint_cloud_defaults_the_relay():
++    assert endpoint({"source": "cloud", "node": "cs-a1b2c3"}, "/health") == sense.DEFAULT_RELAY + "/v1/nodes/cs-a1b2c3/health"
++
++
++def test_endpoint_without_a_node_names_the_remedy():
++    with pytest.raises(sense.SenseError) as e:
++        endpoint({}, "/health")
++    assert "sense use direct" in str(e.value) and "sense use cloud" in str(e.value)
++
++
++# ── use ──────────────────────────────────────────────────────────────────────
++
++
++def test_use_direct_writes_config(isolated):
++    r = _run("use", "direct", "http://10.0.0.5:8078/")
++    assert r.exit_code == 0, r.output
++    cfg = json.loads((isolated / "sense.json").read_text())
++    assert cfg == {"source": "direct", "url": "http://10.0.0.5:8078"}
++    assert "direct" in r.output and "10.0.0.5" in r.output
++
++
++def test_use_direct_rejects_a_bare_host(isolated):
++    r = _run("use", "direct", "10.0.0.5:8078")
++    assert r.exit_code == 1
++    assert "http://" in r.output
++
++
++def test_use_cloud_writes_node_and_relay(isolated):
++    r = _run("use", "cloud", "cs-a1b2c3", "--relay", "https://relay.test/")
++    assert r.exit_code == 0, r.output
++    cfg = json.loads((isolated / "sense.json").read_text())
++    assert cfg == {"source": "cloud", "node": "cs-a1b2c3", "relay": "https://relay.test"}
++
++
++# ── status ───────────────────────────────────────────────────────────────────
++
++
++def test_status_ok_direct(isolated, stub):
++    _run("use", "direct", stub.url)
++    r = _run("status")
++    assert r.exit_code == 0, r.output
++    assert "cs-a1b2c3" in r.output and "tent-1" in r.output and "5,048,780" in r.output
++    assert "ok" in r.output
++    assert stub.seen[-1][1] == "/health"
++    assert "authorization" not in stub.seen[-1][2]
++
++
++def test_status_down_exits_one(isolated):
++    s = Stub(ok=False)
++    try:
++        _run("use", "direct", s.url)
++        r = _run("status")
++    finally:
++        s.close()
++    assert r.exit_code == 1
++    assert "down" in r.output
++
++
++def test_status_unreachable_exits_one(isolated):
++    _run("use", "direct", "http://127.0.0.1:9")
++    r = _run("status")
++    assert r.exit_code == 1
++    assert "unreachable" in r.output
++
++
++def test_status_without_config_exits_one_with_remedy(isolated):
++    r = _run("status")
++    assert r.exit_code == 1
++    assert "sense use" in r.output
++
++
++def test_status_cloud_sends_the_bearer(isolated, stub, monkeypatch):
++    from cli import auth
++    monkeypatch.setattr(auth, "current_access_token", lambda: "tok-123")
++    _run("use", "cloud", "cs-a1b2c3", "--relay", stub.url)
++    r = _run("status")
++    assert r.exit_code == 0, r.output
++    method, path, headers = stub.seen[-1][:3]
++    assert path == "/v1/nodes/cs-a1b2c3/health"
++    assert headers.get("authorization") == "Bearer tok-123"
++
++
++def test_cloud_without_a_session_exits_one_with_login_remedy(isolated, stub):
++    _run("use", "cloud", "cs-a1b2c3", "--relay", stub.url)
++    r = _run("status")
++    assert r.exit_code == 1
++    assert "login" in r.output
++
++
++# ── latest / history ─────────────────────────────────────────────────────────
++
++
++def test_latest_groups_by_zone(isolated, stub):
++    _run("use", "direct", stub.url)
++    r = _run("latest")
++    assert r.exit_code == 0, r.output
++    assert "tent-1" in r.output and "hood-1" in r.output
++    assert "co2_ppm" in r.output and "812" in r.output
++    assert "prefilter_dp_pa" in r.output and "41.00" in r.output
++    assert r.output.index("hood-1") < r.output.index("tent-1")
++
++
++def test_history_prints_stats_and_a_sparkline(isolated, stub):
++    _run("use", "direct", stub.url)
++    r = _run("history", "--metric", "co2_ppm", "--zone", "tent-1", "--hours", "1", "--step", "300")
++    assert r.exit_code == 0, r.output
++    assert "min 700" in r.output and "max 860" in r.output and "12 points" in r.output
++    assert any(ch in r.output for ch in sense.BARS)
++    assert r.output.count(":") >= 2  # first and last timestamps
++    path = stub.seen[-1][1]
++    assert path == "/v1/history"
++
++
++def test_history_cloud_path_and_query(isolated, stub, monkeypatch):
++    from cli import auth
++    monkeypatch.setattr(auth, "current_access_token", lambda: "tok")
++    _run("use", "cloud", "cs-a1b2c3", "--relay", stub.url)
++    r = _run("history", "--metric", "humidity_pct", "--zone", "tent-2", "--hours", "6")
++    assert r.exit_code == 0, r.output
++    assert stub.seen[-1][1] == "/v1/nodes/cs-a1b2c3/history"
++
++
++def test_sparkline_shape():
++    assert sparkline([]) == ""
++    assert sparkline([1, 1, 1]) == sense.BARS[3] * 3
++    s = sparkline([0, 1, 2, 3, 4, 5, 6, 7])
++    assert s == sense.BARS
++    assert len(sparkline(list(range(500)), width=60)) == 60
++
++
++# ── nodes / pair ─────────────────────────────────────────────────────────────
++
++
++def test_nodes_without_token_exits_one(isolated, stub):
++    r = _run("nodes", "--relay", stub.url)
++    assert r.exit_code == 1
++    assert "login" in r.output
++    assert not [s for s in stub.seen if s[1] == "/v1/nodes"]
++
++
++def test_pair_then_nodes(isolated, stub, monkeypatch):
++    from cli import auth
++    monkeypatch.setattr(auth, "current_access_token", lambda: "tok")
++    r = _run("pair", "cs-a1b2c3", "AAAA", "--zone", "tent-1", "--label", "North tent", "--relay", stub.url)
++    assert r.exit_code == 0, r.output
++    assert "paired" in r.output and "cs-a1b2c3" in r.output
++    posted = [s for s in stub.seen if s[0] == "POST"][-1]
++    assert posted[3] == {"node": "cs-a1b2c3", "public_key": "AAAA", "zone": "tent-1", "label": "North tent"}
++    assert posted[2].get("authorization") == "Bearer tok"
++    r = _run("nodes", "--relay", stub.url)
++    assert r.exit_code == 0, r.output
++    assert "North tent" in r.output and "never" in r.output
++
++
++def test_relay_error_body_is_surfaced(isolated, stub, monkeypatch):
++    from cli import auth
++    monkeypatch.setattr(auth, "current_access_token", lambda: "tok")
++    r = _run("pair", "cs-a1b2c3", "AAAA", "--zone", "tent-1", "--relay", stub.url + "/nope")
++    assert r.exit_code == 1
++    assert "not_found" in r.output
++
++
++# ── check ────────────────────────────────────────────────────────────────────
++
++
++def test_check_without_the_analysis_checkout_exits_two(isolated, stub):
++    _run("use", "direct", stub.url)
++    r = _run("check")
++    assert r.exit_code == 2
++    assert "crowe-sense" in r.output
++
++
++def test_check_builds_a_db_and_runs_the_script(isolated, stub, monkeypatch):
++    script = isolated / "analysis" / "sense_check.py"
++    script.parent.mkdir()
++    script.write_text(
++        "import sys, sqlite3\n"
++        "a = sys.argv\n"
++        "db = a[a.index('--db') + 1]; zone = a[a.index('--zone') + 1]\n"
++        "con = sqlite3.connect(db)\n"
++        "n, = con.execute('SELECT COUNT(*) FROM readings WHERE sensor=?', (zone,)).fetchone()\n"
++        "m = [r[0] for r in con.execute('SELECT DISTINCT metric FROM readings ORDER BY metric')]\n"
++        "print('CHECKED', zone, n, ','.join(m))\n"
++        "sys.exit(3 if zone == 'hood-1' else 0)\n"
++    )
++    monkeypatch.setenv(sense.ANALYSIS_ENV, str(script))
++    _run("use", "direct", stub.url)
++    r = _run("check", "--hours", "1")
++    assert r.exit_code == 3, r.output
++    assert "CHECKED tent-1 36 co2_ppm,humidity_pct,temperature_c" in r.output
++    assert "CHECKED hood-1 36" in r.output
++    pulls = [s[1] for s in stub.seen if s[1] == "/v1/history"]
++    assert len(pulls) == 6
++
++
++def test_build_check_db_schema(isolated, stub):
++    cfg = {"source": "direct", "url": stub.url}
++    path, n = sense.build_check_db(cfg, 1.0, ["tent-1"])
++    con = sqlite3.connect(path)
++    cols = [r[1] for r in con.execute("PRAGMA table_info(readings)")]
++    assert cols == ["epoch", "metric", "value", "sensor"]
++    assert n == 36 and con.execute("SELECT COUNT(*) FROM readings").fetchone()[0] == 36
++    os.remove(path)
+-- 
+2.50.1 (Apple Git-155)
+

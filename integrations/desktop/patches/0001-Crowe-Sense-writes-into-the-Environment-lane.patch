@@ -1,0 +1,863 @@
+From 68e74f667b4122b4c91c1a7a26fe3d0145a21762 Mon Sep 17 00:00:00 2001
+From: Michael Crowe <southwestfungi@gmail.com>
+Date: Mon, 31 Aug 2026 23:55:12 -0700
+Subject: [PATCH] Crowe Sense writes into the Environment lane
+
+The Cultivation space has promised since 0.8 that Crowe Sense would write
+room readings into the same store the grower types into. sense.js is that
+write: a poller reads a paired node (direct, the node's own API; or cloud,
+the relay with the Crowe ID bearer) once a minute and upserts one env row
+per room per UTC hour, marked source crowe-sense, so an hour's row is
+rewritten rather than stacked. The store honours a caller-supplied id only
+for the sense: prefix; everything else keeps the old rule that an id must
+already exist.
+
+The lane marks those rows measured, the Overview gets a Crowe Sense card
+(paired or not, ok, stale or down, age of the last reading), and its footnote
+says which rows an instrument wrote once one has. Settings gains Source,
+Node URL and Node id, placed below Guardrails so the space checkboxes stay
+where test-panels hit-tests them.
+
+Contract: crowe-sense/contracts/telemetry-v1.md. The web and mobile bridges
+grow the same sense.{status,configure,onChange} surface (cloud only; a
+browser tab and a phone have no route to a node's plain-http API), so the
+parity walks hold. scripts/test-sense.js covers the endpoint resolution, the
+mapper, staleness and the poller in plain node.
+
+Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_013PpzVWHUD5jhmo5Vcifg87
+---
+ grow-schema.js              |   3 +
+ main.js                     |  56 +++++++++-
+ mobile/src/mobile-bridge.js |  36 +++++++
+ package.json                |   2 +-
+ preload.js                  |   8 ++
+ renderer/app.html           |  13 +++
+ renderer/preview-shim.js    |   8 ++
+ renderer/renderer.js        |  47 ++++++++-
+ renderer/web-bridge.js      |  37 +++++++
+ scripts/test-sense.js       | 202 ++++++++++++++++++++++++++++++++++++
+ sense.js                    | 195 ++++++++++++++++++++++++++++++++++
+ 11 files changed, 598 insertions(+), 9 deletions(-)
+ create mode 100644 scripts/test-sense.js
+ create mode 100644 sense.js
+
+diff --git a/grow-schema.js b/grow-schema.js
+index d6e54fa..e80e229 100644
+--- a/grow-schema.js
++++ b/grow-schema.js
+@@ -62,6 +62,9 @@ const GROW_SCHEMA = {
+       { k: "co2", d: "CO2 in ppm (number)" },
+       { k: "fae", d: "fresh air exchange setting" },
+       { k: "notes", d: "free text" },
++      // Blank when a person typed the row. Crowe Sense writes "crowe-sense", and
++      // the lane marks those rows measured, so the two are never confused.
++      { k: "source", d: "who wrote it: blank for a person, crowe-sense for the instrument" },
+     ],
+   },
+   strains: {
+diff --git a/main.js b/main.js
+index 2605ade..5be2ba9 100644
+--- a/main.js
++++ b/main.js
+@@ -9,7 +9,8 @@ const os = require("os");
+ const http = require("http");
+ const crypto = require("crypto");
+ const { spawn, exec } = require("child_process");
+-const { GROW_TYPES } = require("./grow-schema");
++const { GROW_TYPES, growValidate } = require("./grow-schema");
++const Sense = require("./sense");
+ 
+ let pty = null;
+ try { pty = require("node-pty"); } catch { pty = null; }
+@@ -39,6 +40,9 @@ const DEFAULTS = {
+   // model whose rate this app does not know would otherwise run uncapped. Tokens
+   // are the unit every provider agrees on. 0 = no backstop.
+   turnTokenCap: 400000,
++  // Crowe Sense: off | direct (the node's own API) | cloud (the relay, with the
++  // Crowe ID bearer). Normalised in loadConfig like the tier and the approvals.
++  sense: { ...Sense.SENSE_DEFAULTS },
+ };
+ const APPROVAL_MODES = new Set(["off", "high-risk", "strict"]);
+ 
+@@ -148,6 +152,7 @@ function loadConfig() {
+     cfg.turnBudgetUsd = Number.isFinite(budget) && budget >= 0 ? budget : DEFAULTS.turnBudgetUsd;
+     const tokenCap = Number(cfg.turnTokenCap);
+     cfg.turnTokenCap = Number.isFinite(tokenCap) && tokenCap >= 0 ? tokenCap : DEFAULTS.turnTokenCap;
++    cfg.sense = Sense.normalizeSense(cfg.sense);
+     return cfg;
+   } catch { return { ...DEFAULTS, ...readAuthStore() }; }
+ }
+@@ -1052,7 +1057,7 @@ ipcMain.handle("crowe:get-config", () => {
+   const c = loadConfig();
+   return { baseUrl: c.baseUrl, hasToken: Boolean(c.token), cwd: CWD, autoApprove: c.autoApprove, autonomy: c.autonomy,
+     approvals: c.approvals, verifier: Boolean(c.verifier), turnBudgetUsd: c.turnBudgetUsd,
+-    telemetry: Boolean(c.telemetry), onboarded: Boolean(c.onboarded),
++    telemetry: Boolean(c.telemetry), onboarded: Boolean(c.onboarded), sense: c.sense,
+     mcp: Object.entries(MCP).map(([n, s]) => ({ name: n, tools: s.tools.length })), ptyAvailable: Boolean(pty),
+     version: require("./package.json").version };
+ });
+@@ -1060,8 +1065,9 @@ ipcMain.handle("crowe:set-config", async (_e, patch) => {
+   const c = saveConfig(patch || {});
+   if (patch && patch.cwd) CWD = patch.cwd;
+   if (patch && patch.mcpServers) await mcpConnectAll();
++  if (patch && patch.sense) sensePoller().start();
+   return { baseUrl: c.baseUrl, hasToken: Boolean(c.token), cwd: CWD, autoApprove: c.autoApprove, autonomy: c.autonomy,
+-    approvals: c.approvals, verifier: Boolean(c.verifier), turnBudgetUsd: c.turnBudgetUsd,
++    approvals: c.approvals, verifier: Boolean(c.verifier), turnBudgetUsd: c.turnBudgetUsd, sense: c.sense,
+     mcp: Object.entries(MCP).map(([n, s]) => ({ name: n, tools: s.tools.length })), ptyAvailable: Boolean(pty) };
+ });
+ 
+@@ -1349,8 +1355,13 @@ function growWrite(type, record) {
+   const now = Date.now();
+   if (rec.id) {
+     const i = rows.findIndex((r) => r && r.id === rec.id);
+-    if (i < 0) return { ok: false, error: "no such record" };
+-    rows[i] = { ...rows[i], ...rec, updatedAt: now };
++    // A caller-supplied id is a correction of an existing row, with one
++    // exception: Crowe Sense keys its rows to the zone and the hour
++    // (sense:<zone>:<YYYY-MM-DD-HH>) so a poll rewrites the hour instead of
++    // stacking rows. Only that prefix may insert under its own id.
++    if (i < 0 && !String(rec.id).startsWith("sense:")) return { ok: false, error: "no such record" };
++    if (i < 0) { rec.createdAt = now; rec.updatedAt = now; rows.push(rec); }
++    else rows[i] = { ...rows[i], ...rec, updatedAt: now };
+   } else {
+     rec.id = "g-" + now.toString(36) + "-" + Math.random().toString(36).slice(2, 7);
+     rec.createdAt = now; rec.updatedAt = now;
+@@ -1446,6 +1457,40 @@ ipcMain.handle("crowe:grow:delete", (_e, { type, id } = {}) => {
+   return { ok: true };
+ });
+ 
++/* ─── Crowe Sense ────────────────────────────────────────────────────────────
++   The node's readings, polled once a minute and written into the env store
++   above through the same validation the form and the log_grow tool go through.
++   One row per room per hour, replaced on every poll, marked source crowe-sense.
++   Off until a node is paired in Settings, and off again the moment it is
++   unpaired: nothing polls anything the grower did not name. */
++let _sensePoller = null;
++function senseUpsert(records) {
++  let wrote = 0;
++  for (const rec of records || []) {
++    const v = growValidate("env", rec);
++    if (!v.ok) continue;
++    const r = growWrite("env", v.record);
++    if (r.ok) wrote++;
++  }
++  if (wrote && mainWindow && !mainWindow.isDestroyed()) {
++    try { mainWindow.webContents.send("crowe:sense:changed", { type: "env", wrote }); } catch { /* window gone */ }
++  }
++  return wrote;
++}
++function sensePoller() {
++  if (!_sensePoller) {
++    _sensePoller = new Sense.SensePoller({
++      loadConfig, saveConfig,
++      fetchImpl: (url, init) => fetch(url, init),
++      onRecords: senseUpsert,
++      onChange: (s) => { if (mainWindow && !mainWindow.isDestroyed()) { try { mainWindow.webContents.send("crowe:sense:changed", { type: "status", stale: s.stale }); } catch {} } },
++    });
++  }
++  return _sensePoller;
++}
++ipcMain.handle("crowe:sense:status", () => sensePoller().status());
++ipcMain.handle("crowe:sense:configure", (_e, patch) => sensePoller().configure(patch || {}));
++
+ // ─── Window chrome: menu, tray, global summon (Hypheus/Cortex-style) ─────────
+ function relayMenu(action) { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send("crowe:menu", action); }
+ function setAutonomy(tier) { saveConfig({ autonomy: tier }); buildMenu(); relayMenu("autonomy:" + tier); }
+@@ -1557,6 +1602,7 @@ app.whenReady().then(async () => {
+   pluginsConnectAll();
+   pruneArtifacts();
+   fetchCatalog(); setInterval(fetchCatalog, 10 * 60 * 1000);
++  sensePoller().start();
+   // Keep the Crowe ID session fresh while the app runs: refresh proactively
+   // before expiry so a long-lived window never silently loses the harness.
+   setInterval(() => {
+diff --git a/mobile/src/mobile-bridge.js b/mobile/src/mobile-bridge.js
+index 9847ef6..68fef7f 100644
+--- a/mobile/src/mobile-bridge.js
++++ b/mobile/src/mobile-bridge.js
+@@ -793,6 +793,14 @@
+   // refused write rather than a silently dropped field.
+   const GROW = window.CROWE_GROW || { GROW_SCHEMA: {}, GROW_TYPES: new Set(), growValidate: () => ({ ok: false, error: "grow schema missing" }) };
+   const growKey = (type) => `grow:${type}`;
++  // Crowe Sense config, same closed set as the desktop's sense.js minus direct.
++  const SENSE_RELAY = "https://sense.crowelogic.com";
++  async function senseConfig() {
++    const r = (await store.get("sense")) || {};
++    const node = String(r.node || "").trim().toLowerCase();
++    const paired = r.source !== "off" && /^cs-[0-9a-f]{6}$/.test(node);
++    return { source: paired ? "cloud" : "off", url: "", node, relay: String(r.relay || SENSE_RELAY).replace(/\/+$/, "") || SENSE_RELAY };
++  }
+   async function growRead(type) {
+     if (!GROW.GROW_TYPES.has(String(type || ""))) return [];
+     return (await store.get(growKey(type))) || [];
+@@ -1591,6 +1599,34 @@
+        a shell to lend, and a phone has no stable address to be found at. So
+        these refuse rather than pretend, and point at the half that does exist:
+        remote.pair, above, is how this device joins someone else's companion. */
++    /* Crowe Sense from the phone: the relay, read with this device's own Crowe
++       ID. No direct source, since a phone leaves the tailnet the moment it
++       leaves the building; and no writes into the phone's grow log, which
++       stays what the grower typed on it. */
++    sense: {
++      status: async () => {
++        const cfg = await senseConfig();
++        if (cfg.source === "off") return { config: cfg, health: null, lastPoll: 0, lastError: "", stale: false, running: false };
++        try {
++          const headers = { accept: "application/json" };
++          if (config.token) headers.Authorization = `Bearer ${config.token}`;
++          const r = await fetch(`${cfg.relay}/v1/nodes/${encodeURIComponent(cfg.node)}/health`, { headers });
++          if (!r.ok) return { config: cfg, health: null, lastPoll: Date.now(), lastError: `The Crowe Sense relay answered ${r.status}.`, stale: true, running: false };
++          const health = await r.json();
++          const age = Number(health && health.age_s);
++          return { config: cfg, health, lastPoll: Date.now(), lastError: "", stale: !Number.isFinite(age) || age > 180, running: false };
++        } catch (e) {
++          return { config: cfg, health: null, lastPoll: Date.now(), lastError: String((e && e.message) || e), stale: true, running: false };
++        }
++      },
++      configure: async (patch) => {
++        const cur = await senseConfig();
++        const next = { ...cur, ...(patch || {}) };
++        await store.set("sense", { source: next.source === "off" ? "off" : "cloud", node: String(next.node || "").trim().toLowerCase(), relay: String(next.relay || SENSE_RELAY).replace(/\/+$/, "") || SENSE_RELAY });
++        return { config: await senseConfig(), health: null, lastPoll: 0, lastError: "", stale: false, running: false };
++      },
++      onChange: () => () => {},
++    },
+     companion: {
+       status: async () => ({ running: false, host: null, port: 0, tailscale: null, paired: remoteConfigured(),
+                              error: "A phone cannot host the companion. It joins one — Settings → Remote machine." }),
+diff --git a/package.json b/package.json
+index a0f145b..0bc7f89 100644
+--- a/package.json
++++ b/package.json
+@@ -17,7 +17,7 @@
+     "build:win": "electron-builder --win",
+     "build:linux": "electron-builder --linux",
+     "smoke": "electron scripts/smoke-shot.js",
+-    "test": "node scripts/test-harness.js && node scripts/test-rooms.js && node scripts/test-mobile-bridge.js && node scripts/build-rooms-web.js --check && node scripts/test-web-bridge.js && node mobile/scripts/sync-version.js --check && node scripts/test-version-parity.js && node scripts/test-qr.js && node scripts/test-packaging.js && node scripts/test-companion.js && node scripts/check-contrast.js && node scripts/gen-preview.js --check && node scripts/gen-mark.js --check && node scripts/test-releases-worker.js && node scripts/test-verify-release.js && electron scripts/make-icons.js --check && electron scripts/test-icons.js && electron scripts/test-panels.js && electron scripts/test-mobile-shell.js && electron scripts/test-install-spaces.js && CROWE_ALLOW_PLAINTEXT_AUTH=1 electron scripts/test-rooms-live.js && CROWE_SPACES=chat,projects electron scripts/test-install-spaces.js",
++    "test": "node scripts/test-harness.js && node scripts/test-sense.js && node scripts/test-rooms.js && node scripts/test-mobile-bridge.js && node scripts/build-rooms-web.js --check && node scripts/test-web-bridge.js && node mobile/scripts/sync-version.js --check && node scripts/test-version-parity.js && node scripts/test-qr.js && node scripts/test-packaging.js && node scripts/test-companion.js && node scripts/check-contrast.js && node scripts/gen-preview.js --check && node scripts/gen-mark.js --check && node scripts/test-releases-worker.js && node scripts/test-verify-release.js && electron scripts/make-icons.js --check && electron scripts/test-icons.js && electron scripts/test-panels.js && electron scripts/test-mobile-shell.js && electron scripts/test-install-spaces.js && CROWE_ALLOW_PLAINTEXT_AUTH=1 electron scripts/test-rooms-live.js && CROWE_SPACES=chat,projects electron scripts/test-install-spaces.js",
+     "check:contrast": "node scripts/check-contrast.js",
+     "rooms:web": "node scripts/build-rooms-web.js",
+     "rooms:web:check": "node scripts/build-rooms-web.js --check",
+diff --git a/preload.js b/preload.js
+index ab49af3..121fc49 100644
+--- a/preload.js
++++ b/preload.js
+@@ -107,6 +107,14 @@ contextBridge.exposeInMainWorld("crowe", {
+     // Writes a lot trace to a file the user picks in the OS save dialog.
+     export: (name, text) => ipcRenderer.invoke("crowe:grow:export", { name, text }),
+   },
++  // Crowe Sense: the paired node's health and config, and the switch that pairs
++  // or unpairs it. Readings arrive in grow.list("env") as rows marked measured;
++  // onChange fires when a poll wrote some, or when the node's status moved.
++  sense: {
++    status: () => ipcRenderer.invoke("crowe:sense:status"),
++    configure: (patch) => ipcRenderer.invoke("crowe:sense:configure", patch),
++    onChange: (cb) => { const h = (_e, ev) => cb(ev); ipcRenderer.on("crowe:sense:changed", h); return () => ipcRenderer.removeListener("crowe:sense:changed", h); },
++  },
+   // The phone companion: this app lending its shell, files and git to the
+   // Crowe Logic app on a phone, over Tailscale. `pairSvg` returns finished
+   // markup rather than the pairing URL, so the token is drawn on screen without
+diff --git a/renderer/app.html b/renderer/app.html
+index cc41078..98b610d 100644
+--- a/renderer/app.html
++++ b/renderer/app.html
+@@ -363,6 +363,19 @@
+         <label class="chk"><input id="cfg-verifier" type="checkbox" /> Check a mutating turn independently before reporting it done</label>
+         <label>Cost ceiling per turn, in dollars (0 for none) <input id="cfg-budget" type="number" min="0" step="0.25" /></label>
+       </section>
++      <!-- Crowe Sense. Below Guardrails for the same reason Guardrails is below
++           Spaces: the space checkboxes are hit-tested where they are drawn. -->
++      <section class="key-manager"><div class="settings-section-head"><div><b>Crowe Sense</b><span>Readings from a paired node land in Cultivation as room rows marked measured. Direct reads the node on your own network. Cloud reads it through the relay with your Crowe ID.</span></div><span id="sense-state" class="badge">Off</span></div>
++        <label>Source
++          <select id="cfg-sense-source">
++            <option value="off">Off</option>
++            <option value="direct">Direct (node URL)</option>
++            <option value="cloud">Cloud (node id, Crowe ID)</option>
++          </select>
++        </label>
++        <label>Node URL, for direct <input id="cfg-sense-url" type="text" placeholder="http://100.101.102.103:8078" /></label>
++        <label>Node id, for cloud <input id="cfg-sense-node" type="text" placeholder="cs-a1b2c3" /></label>
++      </section>
+       <label>Official plugins</label>
+       <div id="cfg-plugins" class="plugs"></div>
+       <label>MCP servers — advanced (JSON: {"name":{"command":"...","args":[...]}})
+diff --git a/renderer/preview-shim.js b/renderer/preview-shim.js
+index 9cc685b..5424948 100644
+--- a/renderer/preview-shim.js
++++ b/renderer/preview-shim.js
+@@ -589,6 +589,14 @@
+       async pairSvg() { return { error: "The companion is not running." }; },
+       onEvent() { return () => {}; },
+     },
++    // Crowe Sense in the preview: no node, so the card reads "not paired" and
++    // the settings fields round-trip in memory.
++    sense: {
++      _cfg: { source: "off", url: "", node: "", relay: "https://sense.crowelogic.com" },
++      async status() { return { config: { ...this._cfg }, health: null, lastPoll: 0, lastError: "", stale: false, running: false }; },
++      async configure(patch) { Object.assign(this._cfg, patch || {}); return this.status(); },
++      onChange() { return () => {}; },
++    },
+     // Cultivation records. In-memory rather than canned returns, so the preview
+     // exercises add and delete for real — the list is only half the surface.
+     grow: {
+diff --git a/renderer/renderer.js b/renderer/renderer.js
+index 790ae5b..9ec7b93 100644
+--- a/renderer/renderer.js
++++ b/renderer/renderer.js
+@@ -1856,9 +1856,20 @@ $("settings-btn").addEventListener("click", async () => {
+   $("cfg-verifier").checked = c.verifier !== false;
+   $("cfg-budget").value = Number(c.turnBudgetUsd ?? 2);
+   $("cfg-status").textContent = (c.hasToken ? "Token set. " : "No token yet. ") + (c.ptyAvailable ? "PTY ready." : "PTY unavailable.");
+-  renderSpacePicker(); renderPlugins(); renderKeyManager(); renderCompanion();
++  renderSpacePicker(); renderPlugins(); renderKeyManager(); renderCompanion(); renderSense();
+   modal.classList.remove("hidden");
+ });
++/* Crowe Sense in Settings. The fields are the node's address for a direct
++   read or its id for the relay; the badge is what the last poll found. */
++async function renderSense() {
++  const src = $("cfg-sense-source"), url = $("cfg-sense-url"), node = $("cfg-sense-node"), badge = $("sense-state");
++  if (!src || !url || !node) return;
++  let st = { config: { source: "off" } };
++  try { if (window.crowe.sense) st = (await window.crowe.sense.status()) || st; } catch { /* badge reads down */ }
++  const c = st.config || {};
++  src.value = c.source || "off"; url.value = c.url || ""; node.value = c.node || "";
++  if (badge) badge.textContent = c.source === "off" ? "Off" : st.lastError ? "Down" : st.stale ? "Stale" : (st.health ? "Live" : "Pairing");
++}
+ $("cfg-cancel").addEventListener("click", () => modal.classList.add("hidden"));
+ $("cfg-save").addEventListener("click", async () => {
+   const budget = Number($("cfg-budget").value);
+@@ -1869,8 +1880,15 @@ $("cfg-save").addEventListener("click", async () => {
+   const mcpRaw = $("cfg-mcp").value.trim();
+   if (mcpRaw) { try { patch.mcpServers = JSON.parse(mcpRaw); } catch { $("cfg-status").textContent = "MCP JSON is invalid."; return; } }
+   await window.crowe.setConfig(patch);
++  if (window.crowe.sense && $("cfg-sense-source")) {
++    await window.crowe.sense.configure({ source: $("cfg-sense-source").value, url: $("cfg-sense-url").value.trim(), node: $("cfg-sense-node").value.trim() });
++    refreshCultivation();
++  }
+   modal.classList.add("hidden"); refreshStatus(); loadTree($("cfg-cwd").value.trim() || undefined);
+ });
++// A poll that wrote measured rows, or a node that changed state, redraws the
++// Cultivation space so the grower sees the reading without leaving and coming back.
++if (window.crowe.sense && window.crowe.sense.onChange) window.crowe.sense.onChange(() => refreshCultivation());
+ 
+ // ── Resizable split ──
+ const divider = $("divider"), workbench = $("workbench");
+@@ -2463,9 +2481,10 @@ const GROW = {
+       { k: "co2", label: "CO₂ ppm", type: "number", w: "xs" },
+       { k: "fae", label: "FAE", w: "xs" },
+       { k: "notes", label: "Notes", w: "lg" },
++      { k: "source", label: "Source", w: "xs" },
+     ],
+     id: (r) => r.room || "room", name: (r) => fmtDay(r.date),
+-    flags: (r) => [r.temp ? r.temp + "°F" : "", r.rh ? r.rh + "% RH" : "", r.co2 ? r.co2 + " ppm" : "", r.fae ? "FAE " + r.fae : ""],
++    flags: (r) => [r.source === "crowe-sense" ? "measured" : "", r.temp ? r.temp + "°F" : "", r.rh ? r.rh + "% RH" : "", r.co2 ? r.co2 + " ppm" : "", r.fae ? "FAE " + r.fae : ""],
+   },
+   strains: {
+     title: "Strains", sub: "The culture library: what you hold and where it came from.", one: "strain", plural: "strains", date: "acquired",
+@@ -3105,6 +3124,25 @@ async function refreshCult() {
+     [r.temp && r.temp + "°F", r.rh && r.rh + "%", r.co2 && r.co2 + "ppm"].filter(Boolean).join(" · ") || "—"]),
+     rooms.size ? "" : "No readings this week."]);
+ 
++  /* The instrument. Its readings are already in d.env as rows marked
++     source crowe-sense; this card is the node itself: paired or not, alive or
++     not, how old its last reading is. Read through the same seam the settings
++     use, and tolerant of a bridge without it, so a build that has not grown
++     the surface still draws the rest of the overview. */
++  let sense = { config: { source: "off" } };
++  try { if (window.crowe.sense) sense = (await window.crowe.sense.status()) || sense; } catch { /* the card says down */ }
++  const sc = sense.config || {}, sh = sense.health || {};
++  if (sc.source === "off") {
++    cards.push(["env", "Crowe Sense", [["node", "not paired"], ["next", "Pair a node in Settings."]], "Pair a node in Settings."]);
++  } else {
++    const age = Number(sh.age_s);
++    const ageText = Number.isFinite(age) ? (age < 90 ? `${Math.round(age)} s ago` : age < 5400 ? `${Math.round(age / 60)} min ago` : `${Math.round(age / 3600)} h ago`) : "no reading yet";
++    const rows = [["node", sh.node || sc.node || "?"], ["zone", sh.zone || "?"], ["last reading", ageText],
++      ["status", sense.lastError ? "down" : (sh.ok === false || sense.stale) ? "stale" : "ok"]];
++    if (sense.lastError) rows.push(["reason", sense.lastError]);
++    cards.push(["env", "Crowe Sense", rows, ""]);
++  }
++
+   host.innerHTML = "";
+   for (const [lane, title, rows, empty] of cards) {
+     const c = document.createElement("button");
+@@ -3120,7 +3158,10 @@ async function refreshCult() {
+   // write into the same store, and this line goes when it does.
+   const foot = document.createElement("p");
+   foot.className = "cult-foot";
+-  foot.textContent = "Every figure here is what you entered. Crowe Sense will write room readings into this same store when it lands. Until then, environment is hand-logged.";
++  const measured = since(d.env, "date", 7).find((r) => r.source === "crowe-sense");
++  foot.textContent = measured
++    ? `Room readings marked measured come from Crowe Sense node ${(measured.notes || "").replace(/^Crowe Sense\s*/, "") || sc.node || "?"}. The rest were entered by hand.`
++    : "Every figure here is what you entered. Crowe Sense will write room readings into this same store when it lands. Until then, environment is hand-logged.";
+   host.appendChild(foot);
+ 
+   /* The openers, which shipped as three sentences about a farm that isn't this
+diff --git a/renderer/web-bridge.js b/renderer/web-bridge.js
+index 5b467e2..167b2c6 100644
+--- a/renderer/web-bridge.js
++++ b/renderer/web-bridge.js
+@@ -195,6 +195,15 @@
+ 
+   const KEY_SESSIONS = "crowe.web.sessions";
+   const KEY_CONFIG = "crowe.web.config";
++  const KEY_SENSE = "crowe.web.sense";
++  // Same closed set as sense.js normalizeSense, minus direct: a browser tab
++  // has no route to a node's own API. No node id, no source.
++  function senseConfig() {
++    const r = readJSON(KEY_SENSE, {});
++    const node = String(r.node || "").trim().toLowerCase();
++    const paired = r.source !== "off" && /^cs-[0-9a-f]{6}$/.test(node);
++    return { source: paired ? "cloud" : "off", url: "", node, relay: "" };
++  }
+ 
+   const readJSON = (k, fallback) => {
+     try {
+@@ -1062,6 +1071,34 @@
+       export: unsupported("Export"),
+     },
+ 
++    /* Crowe Sense from a browser tab. A page served over https cannot read a
++       node's plain-http API on a tailnet, so the only source here is the
++       cloud one: the edge forwards /app/sense/* to the relay with this
++       session's Crowe ID, the way it forwards /app/gw/*. Readings do not land
++       in a store on this build (grow.list is empty above); the status is what
++       the Cultivation card shows. */
++    sense: {
++      status: async () => {
++        const cfg = senseConfig();
++        if (cfg.source === "off") return { config: cfg, health: null, lastPoll: 0, lastError: "", stale: false, running: false };
++        try {
++          const r = await fetch(`/app/sense/v1/nodes/${encodeURIComponent(cfg.node)}/health`, { credentials: "include", headers: { accept: "application/json" } });
++          if (!r.ok) return { config: cfg, health: null, lastPoll: Date.now(), lastError: `The Crowe Sense relay answered ${r.status}.`, stale: true, running: false };
++          const health = await r.json();
++          const age = Number(health && health.age_s);
++          return { config: cfg, health, lastPoll: Date.now(), lastError: "", stale: !Number.isFinite(age) || age > 180, running: false };
++        } catch (e) {
++          return { config: cfg, health: null, lastPoll: Date.now(), lastError: String((e && e.message) || e), stale: true, running: false };
++        }
++      },
++      configure: async (patch) => {
++        const stored = { ...readJSON(KEY_SENSE, {}), ...(patch || {}) };
++        writeJSON(KEY_SENSE, { node: String(stored.node || "").trim().toLowerCase(), source: stored.source === "off" ? "off" : "cloud" });
++        return { config: senseConfig(), health: null, lastPoll: 0, lastError: "", stale: false, running: false };
++      },
++      onChange: () => () => {},
++    },
++
+     companion: {
+       status: async () => ({ running: false }),
+       start: unsupported("The phone companion"), stop: unsupported("The phone companion"),
+diff --git a/scripts/test-sense.js b/scripts/test-sense.js
+new file mode 100644
+index 0000000..2359935
+--- /dev/null
++++ b/scripts/test-sense.js
+@@ -0,0 +1,202 @@
++// Crowe Sense in the desktop app, tested in plain node: the endpoint the two
++// sources resolve to, the env rows a snapshot becomes, staleness, and the
++// poller writing through its record sink with a scripted node.
++//
++//   node scripts/test-sense.js
++const assert = require("assert");
++const S = require("../sense");
++
++let pass = 0, fail = 0;
++async function check(name, fn) {
++  try { await fn(); pass++; console.log(`ok      ${name}`); }
++  catch (e) { fail++; console.log(`not ok  ${name}\n        ${e.message}`); }
++}
++
++// A snapshot in the /api/data shape of the contract, with every zone kind the
++// node API emits: two rooms, their derived twins, the hood, the controller.
++const SNAPSHOT = {
++  "tent-1": { temperature_c: { value: 21.0, unit: "C", quality: "ok", age: 4.2 }, humidity_pct: { value: 85.06, unit: "%", quality: "ok", age: 4.2 }, co2_ppm: { value: 812.4, unit: "ppm", quality: "ok", age: 4.2 } },
++  "tent-2": { temperature_c: { value: 18.0, unit: "C", quality: "ok", age: 5 }, humidity_pct: { value: 91.94, unit: "%", quality: "ok", age: 5 } },
++  "tent-1-derived": { vpd_kpa: { value: 0.37, unit: "kPa", quality: "est", age: 4 }, fruiting_score: { value: 88, unit: "", quality: "est", age: 4 } },
++  "hood-1": { prefilter_dp_pa: { value: 42, unit: "Pa", quality: "ok", age: 3 } },
++  "hood-1-derived": { hood_laminar_ok: { value: 1, unit: "", quality: "est", age: 3 } },
++  pi: { soc_temp_c: { value: 51.2, unit: "C", quality: "ok", age: 2 } },
++  incubation: { light_lux: { value: 12, unit: "lux", quality: "ok", age: 2 } },
++};
++const NOW = Date.UTC(2026, 8, 1, 14, 37, 12); // 2026-09-01T14:37:12Z
++
++(async () => {
++  console.log("crowe sense");
++
++  await check("normalizeSense is a closed set and falls to off", () => {
++    assert.deepStrictEqual(S.normalizeSense(undefined), { source: "off", url: "", node: "", relay: "https://sense.crowelogic.com" });
++    assert.strictEqual(S.normalizeSense({ source: "bogus" }).source, "off");
++    assert.strictEqual(S.normalizeSense({ source: "direct", url: "" }).source, "off", "direct without a URL is off");
++    assert.strictEqual(S.normalizeSense({ source: "cloud", node: "not-an-id" }).source, "off", "cloud without a node id is off");
++    assert.strictEqual(S.normalizeSense({ source: "cloud", node: "CS-A1B2C3" }).node, "cs-a1b2c3", "node ids are lowercased");
++    assert.strictEqual(S.normalizeSense({ source: "direct", url: "http://100.1.2.3:8078/" }).url, "http://100.1.2.3:8078", "trailing slash dropped");
++  });
++
++  await check("endpoint: direct is url + path", () => {
++    const cfg = { source: "direct", url: "http://100.123.229.57:8078" };
++    assert.strictEqual(S.endpoint(cfg, "/health"), "http://100.123.229.57:8078/health");
++    assert.strictEqual(S.endpoint(cfg, "/api/data?hours=1"), "http://100.123.229.57:8078/api/data?hours=1");
++    assert.strictEqual(S.endpoint(cfg, "/v1/latest"), "http://100.123.229.57:8078/v1/latest");
++  });
++
++  await check("endpoint: cloud is relay/v1/nodes/<node> + path, with a per-node read's /v1 dropped", () => {
++    const cfg = { source: "cloud", node: "cs-a1b2c3" };
++    assert.strictEqual(S.endpoint(cfg, "/health"), "https://sense.crowelogic.com/v1/nodes/cs-a1b2c3/health");
++    assert.strictEqual(S.endpoint(cfg, "/api/data?hours=1"), "https://sense.crowelogic.com/v1/nodes/cs-a1b2c3/api/data?hours=1");
++    assert.strictEqual(S.endpoint(cfg, "/v1/latest"), "https://sense.crowelogic.com/v1/nodes/cs-a1b2c3/latest");
++    assert.strictEqual(S.endpoint(cfg, "/v1/history?metric=co2_ppm"), "https://sense.crowelogic.com/v1/nodes/cs-a1b2c3/history?metric=co2_ppm");
++    assert.strictEqual(S.endpoint({ ...cfg, relay: "https://relay.test/" }, "/health"), "https://relay.test/v1/nodes/cs-a1b2c3/health");
++  });
++
++  await check("endpoint: off resolves to nothing", () => {
++    assert.strictEqual(S.endpoint({ source: "off" }, "/health"), null);
++  });
++
++  await check("toEnvRecords: one row per room, none for derived, hood or pi", () => {
++    const rows = S.toEnvRecords(SNAPSHOT, "cs-a1b2c3", NOW);
++    assert.deepStrictEqual(rows.map((r) => r.room), ["tent-1", "tent-2"], `rooms were ${rows.map((r) => r.room)}`);
++  });
++
++  await check("toEnvRecords: id is sense:<zone>:<UTC hour>, date is the UTC day", () => {
++    const [t1] = S.toEnvRecords(SNAPSHOT, "cs-a1b2c3", NOW);
++    assert.strictEqual(t1.id, "sense:tent-1:2026-09-01-14");
++    assert.strictEqual(t1.date, "2026-09-01");
++    // A poll six minutes later lands on the same id: the hour's row is rewritten, not stacked.
++    assert.strictEqual(S.toEnvRecords(SNAPSHOT, "cs-a1b2c3", NOW + 6 * 60000)[0].id, t1.id);
++    // The next hour gets a new id.
++    assert.strictEqual(S.toEnvRecords(SNAPSHOT, "cs-a1b2c3", NOW + 30 * 60000)[0].id, "sense:tent-1:2026-09-01-15");
++  });
++
++  await check("toEnvRecords: Fahrenheit to 0.1, RH to 0.1, CO2 whole, source marked", () => {
++    const [t1, t2] = S.toEnvRecords(SNAPSHOT, "cs-a1b2c3", NOW);
++    assert.strictEqual(t1.temp, "69.8", `21.0 C should be 69.8 F, got ${t1.temp}`);
++    assert.strictEqual(t1.rh, "85.1");
++    assert.strictEqual(t1.co2, "812");
++    assert.strictEqual(t1.fae, "");
++    assert.strictEqual(t1.notes, "Crowe Sense cs-a1b2c3");
++    assert.strictEqual(t1.source, "crowe-sense");
++    assert.strictEqual(t2.temp, "64.4", `18.0 C should be 64.4 F, got ${t2.temp}`);
++    assert.strictEqual(t2.rh, "91.9");
++    assert.strictEqual(t2.co2, "", "a zone without CO2 leaves the field blank rather than inventing a value");
++  });
++
++  await check("toEnvRecords: a zone with none of the three room metrics is skipped", () => {
++    const rows = S.toEnvRecords({ incubation: SNAPSHOT.incubation }, "cs-a1b2c3", NOW);
++    assert.strictEqual(rows.length, 0);
++    assert.deepStrictEqual(S.toEnvRecords(null, "x", NOW), []);
++  });
++
++  await check("isStale: past 180 s without a reading, or with no health at all", () => {
++    assert.strictEqual(S.isStale({ age_s: 4.2 }), false);
++    assert.strictEqual(S.isStale({ age_s: 181 }), true);
++    assert.strictEqual(S.isStale({ last_ts: NOW / 1000 - 30 }, NOW), false);
++    assert.strictEqual(S.isStale({ last_ts: NOW / 1000 - 600 }, NOW), true);
++    assert.strictEqual(S.isStale(null), true);
++    assert.strictEqual(S.isStale({}), true);
++  });
++
++  await check("poller: polls health and data, writes rows through the sink, reports status", async () => {
++    let saved = null;
++    const cfg = { sense: { source: "cloud", node: "cs-a1b2c3" }, token: "tok-123" };
++    const calls = [];
++    const fetchImpl = async (url, init) => {
++      calls.push({ url, auth: init.headers.authorization });
++      if (url.endsWith("/health")) return { ok: true, json: async () => ({ ok: true, node: "cs-a1b2c3", zone: "tent-1", age_s: 4.2 }) };
++      if (url.includes("/api/data")) return { ok: true, json: async () => ({ snapshot: SNAPSHOT }) };
++      return { ok: false, status: 404 };
++    };
++    const written = [];
++    const timers = [];
++    const p = new S.SensePoller({
++      loadConfig: () => ({ ...cfg, ...(saved || {}) }),
++      saveConfig: (patch) => { saved = { ...(saved || {}), ...patch }; },
++      fetchImpl,
++      onRecords: (rs) => { written.push(...rs); },
++      now: () => NOW,
++      setInterval: (fn, ms) => { timers.push({ fn, ms }); return { unref() {} }; },
++      clearInterval: () => { timers.length = 0; },
++    });
++    p.start();
++    // start() polls at once, then arms the interval.
++    await new Promise((r) => setTimeout(r, 0));
++    while (p.polling) await new Promise((r) => setTimeout(r, 0));
++    assert.strictEqual(timers.length, 1, "one interval armed");
++    assert.strictEqual(timers[0].ms, S.POLL_MS);
++    assert.strictEqual(calls[0].url, "https://sense.crowelogic.com/v1/nodes/cs-a1b2c3/health");
++    assert.strictEqual(calls[0].auth, "Bearer tok-123", "cloud mode carries the Crowe ID bearer");
++    assert.strictEqual(calls[1].url, "https://sense.crowelogic.com/v1/nodes/cs-a1b2c3/api/data?hours=1");
++    assert.strictEqual(written.length, 2);
++    assert.strictEqual(written[0].id, "sense:tent-1:2026-09-01-14");
++    const st = p.status();
++    assert.strictEqual(st.health.node, "cs-a1b2c3");
++    assert.strictEqual(st.stale, false);
++    assert.strictEqual(st.lastError, "");
++    assert.strictEqual(st.lastPoll, NOW);
++    assert.strictEqual(st.running, true);
++    p.stop();
++    assert.strictEqual(p.status().running, false);
++  });
++
++  await check("poller: a node that answers 503 is reported as an error, not thrown", async () => {
++    const p = new S.SensePoller({
++      loadConfig: () => ({ sense: { source: "direct", url: "http://10.0.0.9:8078" } }),
++      saveConfig: () => {},
++      fetchImpl: async () => ({ ok: false, status: 503 }),
++      onRecords: () => { throw new Error("must not be reached"); },
++      now: () => NOW,
++    });
++    const st = await p.poll();
++    assert.match(st.lastError, /503/);
++    assert.strictEqual(st.stale, true, "no health means stale");
++  });
++
++  await check("poller: direct mode sends no bearer", async () => {
++    const calls = [];
++    const p = new S.SensePoller({
++      loadConfig: () => ({ sense: { source: "direct", url: "http://10.0.0.9:8078" }, token: "tok-123" }),
++      saveConfig: () => {},
++      fetchImpl: async (url, init) => { calls.push(init.headers); return { ok: true, json: async () => ({ ok: true, age_s: 1, snapshot: {} }) }; },
++      onRecords: () => {},
++      now: () => NOW,
++    });
++    await p.poll();
++    assert.strictEqual(calls[0].authorization, undefined);
++  });
++
++  await check("poller: configure persists a normalised config and turning it off stops polling", async () => {
++    let saved = null;
++    const timers = [];
++    const p = new S.SensePoller({
++      loadConfig: () => ({ sense: saved ? saved.sense : { source: "off" } }),
++      saveConfig: (patch) => { saved = patch; },
++      fetchImpl: async () => ({ ok: true, json: async () => ({ ok: true, age_s: 1, snapshot: {} }) }),
++      onRecords: () => {},
++      now: () => NOW,
++      setInterval: (fn, ms) => { timers.push(ms); return { unref() {} }; },
++      clearInterval: () => { timers.length = 0; },
++    });
++    p.configure({ source: "cloud", node: "CS-A1B2C3", url: "" });
++    assert.deepStrictEqual(saved, { sense: { source: "cloud", url: "", node: "cs-a1b2c3", relay: "https://sense.crowelogic.com" } });
++    assert.strictEqual(timers.length, 1, "configuring a source starts the poller");
++    p.configure({ source: "off" });
++    assert.strictEqual(saved.sense.source, "off");
++    assert.strictEqual(timers.length, 0, "off stops it");
++    assert.strictEqual(p.status().running, false);
++    // A stale flag never survives an off config.
++    assert.strictEqual(p.status().stale, false);
++  });
++
++  await check("fmtAge reads like a person would say it", () => {
++    assert.strictEqual(S.fmtAge(4.2), "4 s ago");
++    assert.strictEqual(S.fmtAge(600), "10 min ago");
++    assert.strictEqual(S.fmtAge(7200), "2 h ago");
++  });
++
++  console.log(`\n${pass} passed, ${fail} failed`);
++  process.exit(fail ? 1 : 0);
++})();
+diff --git a/sense.js b/sense.js
+new file mode 100644
+index 0000000..1e79f94
+--- /dev/null
++++ b/sense.js
+@@ -0,0 +1,195 @@
++/* Crowe Sense in the desktop app: a node's readings, written into the grower's
++   own environment log as measured rows.
++
++   The Cultivation space has said since 0.8 that "Crowe Sense will write room
++   readings into this same store when it lands". This is that write. Nothing
++   here replaces the hand-entered rows; a measured row sits beside them with
++   `source: "crowe-sense"`, and the lane marks it, so a grower reading the
++   Environment lane can tell what a person typed from what an instrument saw.
++
++   Contract: ~/crowe-sense/contracts/telemetry-v1.md. Two ways to reach a node:
++     direct  the node's own API on the LAN or tailnet, `url + path`, no auth
++     cloud   the relay, `relay/v1/nodes/<node>` + path, with the Crowe ID bearer
++   The per-node reads on the relay drop the leading `/v1` of the contract's
++   `/v1/latest` and `/v1/history`, because the node id already sits under /v1.
++
++   Pure functions first (endpoint, toEnvRecords, isStale) so scripts/test-sense.js
++   can run them in plain node; the poller takes its fetch, config store and clock
++   as dependencies for the same reason. */
++
++const RELAY_DEFAULT = "https://sense.crowelogic.com";
++const SOURCES = new Set(["off", "direct", "cloud"]);
++const SENSE_DEFAULTS = Object.freeze({ source: "off", url: "", node: "", relay: RELAY_DEFAULT });
++// The contract's /health calls a node down past 180 s without a reading.
++const STALE_S = 180;
++const POLL_MS = 60 * 1000;
++const TIMEOUT_MS = 10 * 1000;
++
++/* A closed set before anything reads it, the same rule loadConfig applies to
++   the autonomy tier: a stored value nobody recognises lands on "off", not on
++   whatever `||` reaches first. */
++function normalizeSense(raw) {
++  const r = raw && typeof raw === "object" ? raw : {};
++  const out = { ...SENSE_DEFAULTS };
++  out.source = SOURCES.has(r.source) ? r.source : "off";
++  out.url = String(r.url || "").trim().replace(/\/+$/, "");
++  out.node = String(r.node || "").trim().toLowerCase();
++  out.relay = String(r.relay || RELAY_DEFAULT).trim().replace(/\/+$/, "") || RELAY_DEFAULT;
++  if (out.source === "direct" && !/^https?:\/\//i.test(out.url)) out.source = "off";
++  if (out.source === "cloud" && !/^cs-[0-9a-f]{6}$/.test(out.node)) out.source = "off";
++  return out;
++}
++
++function endpoint(cfg, path) {
++  const c = normalizeSense(cfg);
++  const p = String(path || "/health");
++  if (c.source === "direct") return c.url + p;
++  if (c.source === "cloud") return `${c.relay}/v1/nodes/${encodeURIComponent(c.node)}${p.replace(/^\/v1(?=\/)/, "")}`;
++  return null;
++}
++
++/* Not rooms: the derived pseudo-zones the node API appends, the controller's
++   own health, and the flow hood. A hood reading in the Environment lane would
++   be a room that does not exist. */
++function isRoomZone(zone) {
++  const z = String(zone || "");
++  if (!z) return false;
++  if (z.endsWith("-derived")) return false;
++  if (z === "pi" || z.endsWith("-pi")) return false;
++  if (z === "hood-1" || z.startsWith("hood")) return false;
++  return true;
++}
++
++const num = (o) => (o && typeof o === "object" && Number.isFinite(Number(o.value)) ? Number(o.value) : null);
++const round1 = (v) => String(Math.round(v * 10) / 10);
++
++/* One env record per room zone in a /api/data snapshot, keyed to the UTC hour
++   so a minute-by-minute poll rewrites the hour's row instead of stacking sixty
++   of them. Temperature is stored in Fahrenheit because that is what the lane
++   and the grower's other rows use. */
++function toEnvRecords(snapshot, node, now = Date.now()) {
++  const out = [];
++  if (!snapshot || typeof snapshot !== "object") return out;
++  const d = new Date(now);
++  const ymd = d.toISOString().slice(0, 10);
++  const hour = String(d.getUTCHours()).padStart(2, "0");
++  for (const zone of Object.keys(snapshot)) {
++    if (!isRoomZone(zone)) continue;
++    const s = snapshot[zone] || {};
++    const t = num(s.temperature_c), rh = num(s.humidity_pct), co2 = num(s.co2_ppm);
++    if (t === null && rh === null && co2 === null) continue;
++    out.push({
++      id: `sense:${zone}:${ymd}-${hour}`,
++      room: zone,
++      date: ymd,
++      temp: t === null ? "" : round1(t * 9 / 5 + 32),
++      rh: rh === null ? "" : round1(rh),
++      co2: co2 === null ? "" : String(Math.round(co2)),
++      fae: "",
++      notes: `Crowe Sense ${node || "node"}`,
++      source: "crowe-sense",
++    });
++  }
++  return out;
++}
++
++function isStale(health, now = Date.now()) {
++  if (!health || typeof health !== "object") return true;
++  if (Number.isFinite(Number(health.age_s))) return Number(health.age_s) > STALE_S;
++  if (Number.isFinite(Number(health.last_ts))) return now / 1000 - Number(health.last_ts) > STALE_S;
++  return true;
++}
++
++function fmtAge(seconds) {
++  const s = Math.max(0, Math.round(Number(seconds) || 0));
++  if (s < 90) return `${s} s ago`;
++  if (s < 5400) return `${Math.round(s / 60)} min ago`;
++  return `${Math.round(s / 3600)} h ago`;
++}
++
++/* The poller. `deps`:
++     loadConfig()  -> the app config; reads .sense and, in cloud mode, .token
++     saveConfig(p) -> persists a patch
++     fetchImpl     -> fetch
++     onRecords(rs) -> where the env rows go (main.js writes them to the store)
++     onChange(s)   -> optional, told after every poll with status()
++     now()         -> clock, for tests
++     setInterval / clearInterval -> timers, for tests */
++class SensePoller {
++  constructor(deps) {
++    this.deps = { now: () => Date.now(), setInterval, clearInterval, onChange: () => {}, ...deps };
++    this.timer = null;
++    this.health = null;
++    this.lastPoll = 0;
++    this.lastError = "";
++    this.polling = false;
++  }
++  config() { return normalizeSense((this.deps.loadConfig() || {}).sense); }
++  headers() {
++    const h = { accept: "application/json" };
++    if (this.config().source === "cloud") {
++      const token = (this.deps.loadConfig() || {}).token;
++      if (token) h.authorization = `Bearer ${token}`;
++    }
++    return h;
++  }
++  async get(path) {
++    const url = endpoint(this.config(), path);
++    if (!url) throw new Error("Crowe Sense is off");
++    const r = await this.deps.fetchImpl(url, { headers: this.headers(), signal: AbortSignal.timeout(TIMEOUT_MS) });
++    if (!r.ok) throw new Error(`Crowe Sense answered ${r.status} for ${path}`);
++    return r.json();
++  }
++  async poll() {
++    if (this.polling) return this.status();
++    this.polling = true;
++    const cfg = this.config();
++    try {
++      if (cfg.source === "off") { this.health = null; return this.status(); }
++      const health = await this.get("/health");
++      this.health = health && typeof health === "object" ? health : null;
++      const data = await this.get("/api/data?hours=1");
++      const records = toEnvRecords(data && data.snapshot, cfg.node || (health && health.node), this.deps.now());
++      if (records.length) await this.deps.onRecords(records);
++      this.lastError = "";
++    } catch (e) {
++      this.lastError = String((e && e.message) || e);
++    } finally {
++      this.lastPoll = this.deps.now();
++      this.polling = false;
++    }
++    const s = this.status();
++    try { this.deps.onChange(s); } catch { /* a listener's failure is not the poller's */ }
++    return s;
++  }
++  start() {
++    this.stop();
++    if (this.config().source === "off") return;
++    this.poll();
++    this.timer = this.deps.setInterval(() => this.poll(), POLL_MS);
++    if (this.timer && typeof this.timer.unref === "function") this.timer.unref();
++  }
++  stop() {
++    if (this.timer) { this.deps.clearInterval(this.timer); this.timer = null; }
++  }
++  status() {
++    const config = this.config();
++    return {
++      config,
++      health: this.health,
++      lastPoll: this.lastPoll,
++      lastError: this.lastError,
++      stale: config.source === "off" ? false : isStale(this.health, this.deps.now()),
++      running: Boolean(this.timer),
++    };
++  }
++  configure(patch) {
++    const merged = normalizeSense({ ...this.config(), ...(patch || {}) });
++    this.deps.saveConfig({ sense: merged });
++    this.health = null; this.lastError = ""; this.lastPoll = 0;
++    this.start();
++    return this.status();
++  }
++}
++
++module.exports = { SENSE_DEFAULTS, RELAY_DEFAULT, STALE_S, POLL_MS, normalizeSense, endpoint, isRoomZone, toEnvRecords, isStale, fmtAge, SensePoller };
+-- 
+2.50.1 (Apple Git-155)
+

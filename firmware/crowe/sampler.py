@@ -11,7 +11,7 @@ from collections.abc import Iterable
 
 from crowe import config
 from crowe.db import open_db
-from crowe.sensors import BME688, SCD41, SHT45, VEML7700, Reading, Sensor
+from crowe.sensors import BME688, SCD41, SDP810, SHT45, VEML7700, PiHealth, Reading, Sensor
 from crowe.sensors.base import I2CBus
 
 log = logging.getLogger("crowe.sampler")
@@ -48,8 +48,30 @@ def _open_bus(bus_no: int) -> I2CBus:
     return SMBus(bus_no)  # type: ignore[return-value]
 
 
-def _build_sensors(bus: I2CBus, overrides: dict[str, float]) -> list[Sensor]:
-    sensors: list[Sensor] = [SCD41(bus), SHT45(bus), BME688(bus), VEML7700(bus)]
+DRIVERS = {
+    "scd41": lambda bus: SCD41(bus),
+    "sht45": lambda bus: SHT45(bus),
+    "bme688": lambda bus: BME688(bus),
+    "veml7700": lambda bus: VEML7700(bus),
+    "sdp810": lambda bus: SDP810(bus),
+    "pi": lambda bus: PiHealth(),
+}
+
+
+def _build_sensors(
+    bus: I2CBus,
+    overrides: dict[str, float],
+    enabled: tuple[str, ...] = ("scd41", "sht45", "bme688", "veml7700"),
+) -> list[Sensor]:
+    """One driver per name in `enabled`, in that order. An unknown name is logged and
+    skipped rather than crashing the sampler, so a typo in node.toml costs one sensor."""
+    sensors: list[Sensor] = []
+    for name in enabled:
+        make = DRIVERS.get(name)
+        if make is None:
+            log.warning("no driver named %s; skipping", name)
+            continue
+        sensors.append(make(bus))
     for s in sensors:
         if s.name in overrides:
             s.period_s = overrides[s.name]  # type: ignore[misc]
@@ -78,7 +100,7 @@ def main() -> None:
     cfg = config.load()
     conn = open_db(cfg.db_path)
     bus = _open_bus(args.bus)
-    sensors = _build_sensors(bus, cfg.sampler_period_overrides)
+    sensors = _build_sensors(bus, cfg.sampler_period_overrides, cfg.sensors_enabled)
 
     log.info("sampler started: %d sensors on bus %d", len(sensors), args.bus)
     try:

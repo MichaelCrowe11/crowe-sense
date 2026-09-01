@@ -1,0 +1,1490 @@
+From ff5511956329c52b772c991584804f7ee0c3a76e Mon Sep 17 00:00:00 2001
+From: Michael Crowe <michael@crowelogic.com>
+Date: Mon, 31 Aug 2026 23:54:50 -0700
+Subject: [PATCH] Sense: the Crowe Sense node as a workbench panel, read live
+
+A new panel type "sense" beside Projects, wired the same way at every
+seam: TabKey/PanelTabKey/PANEL_TABS/TAB_ORDER/TAB_LABELS, PanelType and
+FOCUS_EXISTING_ON_ADD, panel-graph titles, Workspace PANEL_LABELS and
+the PanelContent switch, the LeftRail workbench entry (IconSense), the
+App typeMap, and the command palette.
+
+src/config/sense.ts holds the source (off | direct | cloud) in
+localStorage the way config/farm.ts does; senseEndpoint() maps the
+contract paths (crowe-sense/contracts/telemetry-v1.md) onto either the
+node's own API or the relay's /v1/nodes/<node> mount. src/lib/sense-client
+does the typed reads with a 10 s timeout, the Crowe ID bearer in cloud
+mode, and every failure reduced to the contract's {error, detail} pair.
+
+SenseTab renders GET /api/data?hours=6: a tile row per grow zone
+(temperature, humidity, CO2, VPD, then fruiting score by band, dew
+point, light), three inline-SVG sparklines, a Flow hood section, a
+Controller section, a settings row that persists and refetches, and a
+15 s refresh while mounted. Off shows an empty state, never a demo;
+a failed read shows the detail text. Tokens only, square corners,
+hair-top bevel, card shadow.
+
+Tests: SenseTab.test.tsx, 8 cases (direct render incl. sparklines and
+sections, empty when off, unreachable, contract 404 pair, save and
+refetch, senseEndpoint both modes and refusals).
+---
+ src/App.tsx                       |   1 +
+ src/components/CommandPalette.tsx |   3 +-
+ src/components/Icons.tsx          |  10 +
+ src/components/LeftRail.tsx       |   2 +
+ src/components/SenseTab.css       | 261 ++++++++++++++++
+ src/components/SenseTab.test.tsx  | 185 ++++++++++++
+ src/components/SenseTab.tsx       | 480 ++++++++++++++++++++++++++++++
+ src/components/Workspace.tsx      |   8 +-
+ src/config/sense.ts               | 114 +++++++
+ src/csep/panel-graph.ts           |   1 +
+ src/csep/panels.ts                |   3 +-
+ src/csep/tabs.ts                  |   5 +
+ src/lib/sense-client.ts           | 171 +++++++++++
+ 13 files changed, 1240 insertions(+), 4 deletions(-)
+ create mode 100644 src/components/SenseTab.css
+ create mode 100644 src/components/SenseTab.test.tsx
+ create mode 100644 src/components/SenseTab.tsx
+ create mode 100644 src/config/sense.ts
+ create mode 100644 src/lib/sense-client.ts
+
+diff --git a/src/App.tsx b/src/App.tsx
+index 8967393..e1a2bf2 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -558,6 +558,7 @@ export default function App() {
+       conversation: "ai",
+       terminal: "terminal",
+       farm: "farm",
++      sense: "sense",
+       code: "code",
+       workflow: "workflow",
+       notebook: "notebook",
+diff --git a/src/components/CommandPalette.tsx b/src/components/CommandPalette.tsx
+index 7ad3372..4810729 100644
+--- a/src/components/CommandPalette.tsx
++++ b/src/components/CommandPalette.tsx
+@@ -124,13 +124,14 @@ export function CommandPalette() {
+       run: () => setActive(key),
+     }));
+ 
+-    const panelTypes: PanelType[] = ["ai", "terminal", "farm", "code", "workflow", "notebook", "browser", "ide", "agent"];
++    const panelTypes: PanelType[] = ["ai", "terminal", "farm", "sense", "code", "workflow", "notebook", "browser", "ide", "agent"];
+     const panelLabels: Record<PanelType, string> = {
+       workbench: "Workbench",
+       agent: "Agent",
+       ai: "Conversation",
+       terminal: "Terminal",
+       farm: "Projects",
++      sense: "Sense",
+       code: "Code",
+       workflow: "Workflow",
+       notebook: "Notebook",
+diff --git a/src/components/Icons.tsx b/src/components/Icons.tsx
+index 0e051c2..e2a2886 100644
+--- a/src/components/Icons.tsx
++++ b/src/components/Icons.tsx
+@@ -69,6 +69,16 @@ export const IconProjects = (p: IconProps) => (
+   </Svg>
+ );
+ 
++/* Sense: a sensor head, a lens over a node with a reading line. Distinct from
++ * IconFarm (the leaf) and IconCircuit (the board). */
++export const IconSense = (p: IconProps) => (
++  <Svg {...p}>
++    <circle cx="12" cy="11" r="3.2" />
++    <path d="M6.5 6.2a7.5 7.5 0 0 1 11 0M4 3.6a11 11 0 0 1 16 0" />
++    <path d="M12 14.2V20M8.5 20h7" />
++  </Svg>
++);
++
+ export const IconCode = (p: IconProps) => (
+   <Svg {...p}>
+     <path d="M8.5 6.5 4 12l4.5 5.5" />
+diff --git a/src/components/LeftRail.tsx b/src/components/LeftRail.tsx
+index 5252661..3a7630e 100644
+--- a/src/components/LeftRail.tsx
++++ b/src/components/LeftRail.tsx
+@@ -17,6 +17,7 @@ import {
+   IconCode,
+   IconDatasets,
+   IconProjects,
++  IconSense,
+   IconTerminal,
+   IconWorkflow,
+ } from "./Icons";
+@@ -64,6 +65,7 @@ const WORKBENCH_TOOLS: WorkbenchEntry[] = [
+   { key: "workflow", panel: "workflow", label: "Workflow", icon: IconWorkflow },
+   { key: "notebook", panel: "notebook", label: "Notebook", icon: IconDatasets },
+   { key: "farm", panel: "farm", label: "Projects", icon: IconProjects },
++  { key: "sense", panel: "sense", label: "Sense", icon: IconSense },
+ ];
+ 
+ function RailGroupLabel({ children }: { children: React.ReactNode }) {
+diff --git a/src/components/SenseTab.css b/src/components/SenseTab.css
+new file mode 100644
+index 0000000..7f0894a
+--- /dev/null
++++ b/src/components/SenseTab.css
+@@ -0,0 +1,261 @@
++/* Sense tab. Token-only: stepped surfaces, hairline top-bevel, graphite-tinted
++ * card shadow, square corners. Reads in every theme and palette because it
++ * never names a color. */
++
++.cx-sense {
++  gap: 0;
++}
++
++.cx-sense-head {
++  display: flex;
++  align-items: baseline;
++  gap: var(--s-3);
++  padding: var(--s-2) 0;
++  border-bottom: 1px solid var(--hairline);
++}
++
++.cx-sense-h {
++  margin: 0;
++  font-family: var(--font-display);
++  font-weight: 500;
++  font-size: 18px;
++  letter-spacing: 0.2px;
++  color: var(--text);
++}
++
++.cx-sense-dot {
++  width: 8px;
++  height: 8px;
++  border-radius: var(--radius-pill);
++  background: var(--text-dim);
++  align-self: center;
++}
++.cx-sense-dot[data-status="ok"] {
++  background: var(--success);
++  box-shadow: 0 0 8px var(--success-wash);
++}
++.cx-sense-dot[data-status="down"] {
++  background: var(--error);
++}
++.cx-sense-dot[data-status="pending"] {
++  background: var(--accent);
++}
++
++.cx-sense-meta {
++  font-family: var(--font-mono);
++  font-size: var(--t-micro);
++  color: var(--text-dim);
++  display: flex;
++  flex-wrap: wrap;
++  gap: var(--s-2);
++}
++.cx-sense-meta b {
++  color: var(--accent-text);
++  font-weight: 600;
++}
++.cx-sense-status {
++  text-transform: uppercase;
++  letter-spacing: var(--track-wider);
++}
++
++.cx-sense-settings {
++  display: flex;
++  flex-wrap: wrap;
++  align-items: flex-end;
++  gap: var(--s-2) var(--s-3);
++  padding: var(--s-2) 0;
++  border-bottom: 1px solid var(--hairline-faint);
++}
++.cx-sense-field {
++  display: flex;
++  flex-direction: column;
++  gap: 2px;
++  min-width: 140px;
++}
++.cx-sense-field-wide {
++  flex: 1 1 240px;
++}
++.cx-sense-field span {
++  font-family: var(--font-mono);
++  font-size: var(--t-micro);
++  letter-spacing: var(--track-wide);
++  text-transform: uppercase;
++  color: var(--text-dim);
++}
++.cx-sense-field input,
++.cx-sense-field select {
++  height: 26px;
++  padding: 0 var(--s-2);
++  border: 1px solid var(--hairline);
++  border-radius: var(--radius-sm);
++  background: var(--surface-sunken);
++  color: var(--text);
++  font-family: var(--font-mono);
++  font-size: var(--t-label);
++}
++.cx-sense-field input:focus,
++.cx-sense-field select:focus {
++  outline: none;
++  border-color: var(--accent);
++}
++.cx-sense-save {
++  height: 26px;
++  padding: 0 var(--s-3);
++  border: 1px solid var(--accent);
++  border-radius: var(--radius-sm);
++  background: var(--wash-accent);
++  color: var(--accent-text);
++  font-family: var(--font-mono);
++  font-size: var(--t-micro);
++  letter-spacing: var(--track-wide);
++  text-transform: uppercase;
++  cursor: pointer;
++}
++.cx-sense-save:hover {
++  background: var(--wash-accent-mid);
++}
++
++.cx-sense-body {
++  padding-top: var(--s-2);
++}
++
++.cx-sense-section {
++  margin: var(--s-3) 0 var(--s-4);
++}
++.cx-sense-title {
++  margin: 0 0 var(--s-2);
++  font-family: var(--font-display);
++  font-weight: 500;
++  font-size: 13px;
++  letter-spacing: var(--track-widest);
++  text-transform: uppercase;
++  color: var(--accent-text);
++}
++
++.cx-sense-tiles {
++  display: grid;
++  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
++  gap: var(--s-2);
++}
++.cx-sense-tile {
++  display: flex;
++  flex-direction: column;
++  gap: var(--s-1);
++  padding: var(--s-3);
++  background: var(--surface-raised);
++  border: 1px solid var(--hairline);
++  border-radius: var(--radius-sm);
++  box-shadow: inset 0 1px 0 var(--hair-top), var(--shadow-card);
++}
++.cx-sense-k {
++  font-family: var(--font-mono);
++  font-size: var(--t-micro);
++  letter-spacing: var(--track-wide);
++  text-transform: uppercase;
++  color: var(--text-dim);
++}
++.cx-sense-v {
++  font-family: var(--font-mono);
++  font-size: 22px;
++  font-weight: 600;
++  line-height: 1;
++  color: var(--text);
++}
++.cx-sense-u {
++  margin-left: var(--s-1);
++  font-size: var(--t-caption);
++  font-weight: 400;
++  color: var(--text-dim);
++}
++.cx-sense-q {
++  font-family: var(--font-mono);
++  font-size: var(--t-micro);
++  color: var(--warn-text);
++}
++.cx-sense-q[data-quality="est"] {
++  color: var(--text-dim);
++}
++.cx-sense-q[data-quality="fault"] {
++  color: var(--error-text);
++}
++.cx-sense-score {
++  font-family: var(--font-mono);
++  font-size: 32px;
++  font-weight: 600;
++  line-height: 1;
++}
++.cx-sense-score[data-band="good"] {
++  color: var(--success-text);
++}
++.cx-sense-score[data-band="fair"] {
++  color: var(--warn-text);
++}
++.cx-sense-score[data-band="poor"] {
++  color: var(--error-text);
++}
++.cx-sense-flag {
++  font-family: var(--font-mono);
++  font-size: var(--t-label);
++  font-weight: 600;
++  letter-spacing: var(--track-wide);
++  text-transform: uppercase;
++  padding: 2px var(--s-2);
++  align-self: flex-start;
++  border-radius: var(--radius-sm);
++}
++.cx-sense-flag[data-good="yes"] {
++  color: var(--success-text);
++  background: var(--success-wash);
++}
++.cx-sense-flag[data-good="no"] {
++  color: var(--error-text);
++  background: var(--error-wash);
++}
++
++.cx-sense-charts {
++  display: grid;
++  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
++  gap: var(--s-2);
++  margin-top: var(--s-2);
++}
++.cx-sense-chart {
++  display: flex;
++  flex-direction: column;
++  gap: var(--s-1);
++  padding: var(--s-2) var(--s-3);
++  background: var(--surface-raised);
++  border: 1px solid var(--hairline);
++  border-radius: var(--radius-sm);
++  box-shadow: inset 0 1px 0 var(--hair-top), var(--shadow-card);
++}
++.cx-sense-spark {
++  display: block;
++  width: 100%;
++  height: 56px;
++}
++.cx-sense-spark-area {
++  fill: var(--wash-accent-mid);
++}
++.cx-sense-spark-line {
++  fill: none;
++  stroke: var(--accent);
++  stroke-width: 1.6;
++  stroke-linejoin: round;
++  stroke-linecap: round;
++  vector-effect: non-scaling-stroke;
++}
++.cx-sense-spark-dot {
++  fill: var(--text);
++}
++.cx-sense-chart-range {
++  font-family: var(--font-mono);
++  font-size: var(--t-micro);
++  color: var(--text-dim);
++}
++
++.cx-sense-foot {
++  margin: var(--s-3) 0 var(--s-4);
++  font-family: var(--font-mono);
++  font-size: var(--t-micro);
++  color: var(--text-dim);
++}
+diff --git a/src/components/SenseTab.test.tsx b/src/components/SenseTab.test.tsx
+new file mode 100644
+index 0000000..93605b4
+--- /dev/null
++++ b/src/components/SenseTab.test.tsx
+@@ -0,0 +1,185 @@
++// @vitest-environment happy-dom
++import { fireEvent, render, screen, waitFor } from "@testing-library/react";
++import { beforeEach, describe, expect, it, vi } from "vitest";
++
++vi.mock("../csep/auth", () => ({
++  useAuth: { getState: () => ({ accessToken: async () => null }) },
++}));
++
++import { SenseTab } from "./SenseTab";
++import { DEFAULT_RELAY, senseEndpoint, type SenseConfig } from "../config/sense";
++
++function installStorage(seed: Record<string, string> = {}) {
++  const store = new Map<string, string>(Object.entries(seed));
++  Object.defineProperty(window, "localStorage", {
++    configurable: true,
++    value: {
++      getItem: (key: string) => store.get(key) ?? null,
++      setItem: (key: string, value: string) => store.set(key, value),
++      removeItem: (key: string) => store.delete(key),
++      clear: () => store.clear(),
++    },
++  });
++  return store;
++}
++
++const T0 = 1_756_700_000;
++const series = (base: number, step: number): [number, number][] =>
++  Array.from({ length: 12 }, (_, i) => [T0 - (11 - i) * 1800, base + i * step]);
++
++/* Contract-shaped GET /api/data?hours=6 payload (telemetry-v1.md). */
++const payload = {
++  generated: T0,
++  node: "cs-a1b2c3",
++  count: 5048780,
++  hours: 6,
++  snapshot: {
++    "tent-1": {
++      temperature_c: { value: 21.04, unit: "C", quality: "ok", age: 4.2 },
++      humidity_pct: { value: 85.1, unit: "%", quality: "ok", age: 4.2 },
++      co2_ppm: { value: 812, unit: "ppm", quality: "ok", age: 5.0 },
++      light_lux: { value: 320, unit: "lux", quality: "ok", age: 4.0 },
++    },
++    "tent-1-derived": {
++      vpd_kpa: { value: 0.37, unit: "kPa", quality: "est", age: 4.2 },
++      dew_point_c: { value: 18.3, unit: "C", quality: "est", age: 4.2 },
++      fruiting_score: { value: 88.4, unit: "", quality: "est", age: 4.2 },
++    },
++    "hood-1": {
++      prefilter_dp_pa: { value: 41, unit: "Pa", quality: "ok", age: 6 },
++    },
++    "hood-1-derived": {
++      hood_face_velocity_fpm: { value: 102, unit: "fpm", quality: "est", age: 6 },
++      hood_laminar_ok: { value: 1, unit: "", quality: "est", age: 6 },
++    },
++    pi: {
++      soc_temp_c: { value: 48.7, unit: "C", quality: "ok", age: 3 },
++      undervoltage_now: { value: 0, unit: "", quality: "ok", age: 3 },
++    },
++  },
++  series: {
++    "tent-1|temperature_c": series(20.2, 0.08),
++    "tent-1|humidity_pct": series(88, -0.3),
++    "tent-1|co2_ppm": series(700, 10),
++  },
++};
++
++function okJson(body: unknown) {
++  return new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
++}
++
++describe("SenseTab", () => {
++  beforeEach(() => {
++    vi.restoreAllMocks();
++  });
++
++  it("renders tiles, derived metrics, sparklines, hood and controller from a direct node", async () => {
++    installStorage({ "crowe-sense-source": "direct", "crowe-sense-url": "http://node.test:8078" });
++    const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => okJson(payload));
++    vi.stubGlobal("fetch", fetchMock);
++
++    const { container } = render(<SenseTab />);
++
++    await screen.findByText("Temperature");
++    expect(fetchMock).toHaveBeenCalledTimes(1);
++    expect(String(fetchMock.mock.calls[0][0])).toBe("http://node.test:8078/api/data?hours=6");
++
++    expect(screen.getByText("812")).toBeInTheDocument();
++    expect(screen.getByText("85.10")).toBeInTheDocument();
++    expect(screen.getByText("0.37")).toBeInTheDocument();
++    expect(screen.getByText("88.40")).toBeInTheDocument();
++    expect(container.querySelector('.cx-sense-score[data-band="good"]')).not.toBeNull();
++
++    const sparks = container.querySelectorAll("svg.cx-sense-spark");
++    expect(sparks.length).toBe(3);
++    expect(container.querySelector(".cx-sense-spark-line")?.getAttribute("d")).toMatch(/^M/);
++
++    expect(screen.getByRole("region", { name: "Flow hood" })).toBeInTheDocument();
++    expect(screen.getByText("Laminar flow")).toBeInTheDocument();
++    expect(screen.getByRole("region", { name: "Controller" })).toBeInTheDocument();
++    expect(screen.getByText("cs-a1b2c3")).toBeInTheDocument();
++    expect(screen.getByText(/5,048,780 readings/)).toBeInTheDocument();
++    expect(screen.getByText(/updated/)).toBeInTheDocument();
++    expect(container.querySelector('.cx-sense-dot[data-status="ok"]')).not.toBeNull();
++  });
++
++  it("shows the empty state and never fetches when the source is off", () => {
++    installStorage();
++    const fetchMock = vi.fn();
++    vi.stubGlobal("fetch", fetchMock);
++
++    render(<SenseTab />);
++
++    expect(screen.getByText("No node paired.")).toBeInTheDocument();
++    expect(screen.getByText(/Choose direct for a node on your network or cloud for a relay node/)).toBeInTheDocument();
++    expect(fetchMock).not.toHaveBeenCalled();
++  });
++
++  it("shows the error state with the failure detail when the node cannot be reached", async () => {
++    installStorage({ "crowe-sense-source": "direct", "crowe-sense-url": "http://node.test:8078" });
++    vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("Failed to fetch"); }));
++
++    render(<SenseTab />);
++
++    const alert = await screen.findByRole("alert");
++    expect(alert).toHaveTextContent("Cannot read the node (unreachable).");
++    expect(alert).toHaveTextContent("cannot reach http://node.test:8078/api/data?hours=6: Failed to fetch");
++  });
++
++  it("surfaces the contract error pair from a non-2xx answer", async () => {
++    installStorage({ "crowe-sense-source": "direct", "crowe-sense-url": "http://node.test:8078" });
++    vi.stubGlobal(
++      "fetch",
++      vi.fn(async () => new Response(JSON.stringify({ error: "not_found", detail: "no such node" }), { status: 404 })),
++    );
++
++    render(<SenseTab />);
++
++    const alert = await screen.findByRole("alert");
++    expect(alert).toHaveTextContent("not_found");
++    expect(alert).toHaveTextContent("no such node");
++  });
++
++  it("saves a new source and refetches against it", async () => {
++    const store = installStorage();
++    const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => okJson(payload));
++    vi.stubGlobal("fetch", fetchMock);
++
++    render(<SenseTab />);
++    fireEvent.change(screen.getByLabelText("Source"), { target: { value: "direct" } });
++    fireEvent.change(screen.getByLabelText("Node address"), { target: { value: "http://10.0.0.9:8078/" } });
++    fireEvent.click(screen.getByRole("button", { name: "Save" }));
++
++    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
++    expect(String(fetchMock.mock.calls[0][0])).toBe("http://10.0.0.9:8078/api/data?hours=6");
++    expect(store.get("crowe-sense-source")).toBe("direct");
++    expect(store.get("crowe-sense-url")).toBe("http://10.0.0.9:8078/");
++  });
++});
++
++describe("senseEndpoint", () => {
++  const base: SenseConfig = { source: "off", url: "", node: "", relay: DEFAULT_RELAY };
++
++  it("direct mode appends the contract path to the node address", () => {
++    const cfg = { ...base, source: "direct" as const, url: "http://100.123.229.57:8078/" };
++    expect(senseEndpoint(cfg, "/health")).toBe("http://100.123.229.57:8078/health");
++    expect(senseEndpoint(cfg, "/api/data?hours=6")).toBe("http://100.123.229.57:8078/api/data?hours=6");
++    expect(senseEndpoint(cfg, "/v1/latest")).toBe("http://100.123.229.57:8078/v1/latest");
++  });
++
++  it("cloud mode mounts per-node reads under the relay and strips the /v1 prefix", () => {
++    const cfg = { ...base, source: "cloud" as const, node: "cs-a1b2c3" };
++    expect(senseEndpoint(cfg, "/health")).toBe("https://sense.crowelogic.com/v1/nodes/cs-a1b2c3/health");
++    expect(senseEndpoint(cfg, "/api/data?hours=6")).toBe("https://sense.crowelogic.com/v1/nodes/cs-a1b2c3/api/data?hours=6");
++    expect(senseEndpoint(cfg, "/v1/latest")).toBe("https://sense.crowelogic.com/v1/nodes/cs-a1b2c3/latest");
++    expect(senseEndpoint(cfg, "/v1/history?metric=co2_ppm&zone=tent-1")).toBe(
++      "https://sense.crowelogic.com/v1/nodes/cs-a1b2c3/history?metric=co2_ppm&zone=tent-1",
++    );
++  });
++
++  it("refuses to build a URL it cannot stand behind", () => {
++    expect(() => senseEndpoint(base, "/health")).toThrow(/no node paired/);
++    expect(() => senseEndpoint({ ...base, source: "cloud", node: "raspberrypi" }, "/health")).toThrow(/cs-a1b2c3/);
++    expect(() => senseEndpoint({ ...base, source: "direct", url: "  " }, "/health")).toThrow(/node address/);
++  });
++});
+diff --git a/src/components/SenseTab.tsx b/src/components/SenseTab.tsx
+new file mode 100644
+index 0000000..066b825
+--- /dev/null
++++ b/src/components/SenseTab.tsx
+@@ -0,0 +1,480 @@
++/* Sense: the Crowe Sense node, read live.
++ *
++ * Same discipline as CockpitTelemetry: every number on this surface came off
++ * the node within the last refresh, or the surface says why it did not. There
++ * is no sample data, no placeholder reading, and an unpaired node shows an
++ * empty state rather than a demo. The read contract is
++ * crowe-sense/contracts/telemetry-v1.md; the shape rendered here is
++ * `GET /api/data?hours=6`, served identically by the node and the relay.
++ */
++import { useCallback, useEffect, useMemo, useState, type ReactElement } from "react";
++import {
++  getSenseConfig,
++  getSenseToken,
++  setSenseConfig,
++  setSenseToken,
++  type SenseConfig,
++  type SenseSource,
++} from "../config/sense";
++import { describeSenseError, fetchData, type SenseData, type SnapshotEntry } from "../lib/sense-client";
++import { useAuth } from "../csep/auth";
++import { EmptyState, ErrorState, LoadingState } from "./StateSurface";
++import "./SenseTab.css";
++
++const REFRESH_MS = 15_000;
++const CLOCK_MS = 5_000;
++/** A reading older than this is not "live"; the header dot goes down. */
++const STALE_S = 180;
++
++const LABELS: Record<string, string> = {
++  temperature_c: "Temperature",
++  humidity_pct: "Humidity",
++  co2_ppm: "CO2",
++  vpd_kpa: "VPD",
++  dew_point_c: "Dew point",
++  light_lux: "Light",
++  fruiting_score: "Fruiting score",
++  co2_trend_ppm_min: "CO2 trend",
++  gas_ohms: "Gas resistance",
++  pressure_hpa: "Pressure",
++  prefilter_dp_pa: "Prefilter dP",
++  prefilter_load_pct: "Prefilter load",
++  prefilter_days_left: "Prefilter life",
++  hood_face_velocity_fpm: "Face velocity",
++  hood_laminar_ok: "Laminar flow",
++  soc_temp_c: "SoC temperature",
++  arm_clock_mhz: "ARM clock",
++  core_volts: "Core volts",
++  undervoltage_now: "Undervoltage",
++  throttled_now: "Throttled",
++};
++
++const TILE_METRICS = ["temperature_c", "humidity_pct", "co2_ppm", "vpd_kpa"] as const;
++const CHART_METRICS = ["temperature_c", "humidity_pct", "co2_ppm"] as const;
++const HOOD_METRICS = ["hood_face_velocity_fpm", "prefilter_load_pct", "prefilter_days_left", "prefilter_dp_pa"] as const;
++const PI_METRICS = ["soc_temp_c", "arm_clock_mhz", "core_volts"] as const;
++
++type Status = "ok" | "down" | "unpaired" | "pending";
++
++function label(metric: string): string {
++  return LABELS[metric] ?? metric.replace(/_/g, " ");
++}
++
++function fmt(v: number): string {
++  if (!Number.isFinite(v)) return "n/a";
++  return Math.abs(v) >= 100 ? Math.round(v).toLocaleString() : v.toFixed(2);
++}
++
++function ago(seconds: number): string {
++  if (!Number.isFinite(seconds) || seconds < 0) return "now";
++  if (seconds < 90) return `${Math.round(seconds)} s ago`;
++  if (seconds < 5400) return `${Math.round(seconds / 60)} min ago`;
++  return `${(seconds / 3600).toFixed(1)} h ago`;
++}
++
++function scoreBand(v: number): "good" | "fair" | "poor" {
++  return v >= 75 ? "good" : v >= 50 ? "fair" : "poor";
++}
++
++/** Zones that carry grow-room readings: not derived, not the hood, not the controller. */
++function growZones(snapshot: SenseData["snapshot"]): string[] {
++  return Object.keys(snapshot)
++    .filter((z) => !z.endsWith("-derived") && z !== "pi" && !z.startsWith("hood"))
++    .sort();
++}
++
++function hoodZones(snapshot: SenseData["snapshot"]): string[] {
++  return Object.keys(snapshot)
++    .filter((z) => z.startsWith("hood") && !z.endsWith("-derived"))
++    .sort();
++}
++
++function freshestAge(snapshot: SenseData["snapshot"], zones: string[]): number | null {
++  let best: number | null = null;
++  for (const z of zones) {
++    for (const e of Object.values(snapshot[z] ?? {})) {
++      if (best === null || e.age < best) best = e.age;
++    }
++  }
++  return best;
++}
++
++/* ------------------------------------------------------------------ *
++ *  Pieces
++ * ------------------------------------------------------------------ */
++
++function Tile({ metric, entry }: { metric: string; entry: SnapshotEntry }) {
++  return (
++    <div className="cx-sense-tile" data-metric={metric}>
++      <span className="cx-sense-k">{label(metric)}</span>
++      <span className="cx-sense-v">
++        {fmt(entry.value)}
++        <span className="cx-sense-u">{entry.unit}</span>
++      </span>
++      {entry.quality && entry.quality !== "ok" && (
++        <span className="cx-sense-q" data-quality={entry.quality}>
++          {entry.quality}
++        </span>
++      )}
++    </div>
++  );
++}
++
++function ScoreTile({ entry }: { entry: SnapshotEntry }) {
++  const band = scoreBand(entry.value);
++  return (
++    <div className="cx-sense-tile" data-metric="fruiting_score">
++      <span className="cx-sense-k">Fruiting score</span>
++      <span className="cx-sense-score" data-band={band}>
++        {fmt(entry.value)}
++      </span>
++      <span className="cx-sense-q" data-quality="est">
++        derived
++      </span>
++    </div>
++  );
++}
++
++function FlagTile({ metric, entry, goodWhenOn }: { metric: string; entry: SnapshotEntry; goodWhenOn: boolean }) {
++  const on = entry.value >= 0.5;
++  const good = goodWhenOn ? on : !on;
++  return (
++    <div className="cx-sense-tile" data-metric={metric}>
++      <span className="cx-sense-k">{label(metric)}</span>
++      <span className="cx-sense-flag" data-good={good ? "yes" : "no"}>
++        {on ? "yes" : "no"}
++      </span>
++    </div>
++  );
++}
++
++const SPARK_W = 240;
++const SPARK_H = 56;
++
++export function Sparkline({ points, unit, title }: { points?: [number, number][]; unit: string; title: string }) {
++  const geometry = useMemo(() => {
++    if (!points || points.length < 2) return null;
++    const xs = points.map((p) => p[0]);
++    const ys = points.map((p) => p[1]);
++    const x0 = xs[0];
++    const x1 = xs[xs.length - 1];
++    let lo = Math.min(...ys);
++    let hi = Math.max(...ys);
++    if (hi - lo < 1e-6) {
++      hi += 1;
++      lo -= 1;
++    }
++    const pad = (hi - lo) * 0.12;
++    lo -= pad;
++    hi += pad;
++    const L = 3;
++    const T = 4;
++    const sx = (v: number) => L + ((v - x0) / (x1 - x0 || 1)) * (SPARK_W - 2 * L);
++    const sy = (v: number) => T + (1 - (v - lo) / (hi - lo)) * (SPARK_H - 2 * T);
++    const d = points.map((p, i) => `${i ? "L" : "M"}${sx(p[0]).toFixed(1)} ${sy(p[1]).toFixed(1)}`).join(" ");
++    const area = `${d} L${sx(x1).toFixed(1)} ${SPARK_H - T} L${sx(x0).toFixed(1)} ${SPARK_H - T} Z`;
++    const last = ys[ys.length - 1];
++    return {
++      d,
++      area,
++      lastX: sx(x1),
++      lastY: sy(last),
++      min: Math.min(...ys),
++      max: Math.max(...ys),
++    };
++  }, [points]);
++
++  return (
++    <div className="cx-sense-chart">
++      <span className="cx-sense-k">{title}</span>
++      {geometry ? (
++        <>
++          <svg
++            className="cx-sense-spark"
++            viewBox={`0 0 ${SPARK_W} ${SPARK_H}`}
++            preserveAspectRatio="none"
++            role="img"
++            aria-label={`${title}, ${fmt(geometry.min)} to ${fmt(geometry.max)} ${unit} over the window`}
++          >
++            <path className="cx-sense-spark-area" d={geometry.area} />
++            <path className="cx-sense-spark-line" d={geometry.d} />
++            <circle className="cx-sense-spark-dot" cx={geometry.lastX.toFixed(1)} cy={geometry.lastY.toFixed(1)} r="2.2" />
++          </svg>
++          <span className="cx-sense-chart-range">
++            {fmt(geometry.min)} to {fmt(geometry.max)} {unit}
++          </span>
++        </>
++      ) : (
++        <span className="cx-sense-chart-range">no series in this window</span>
++      )}
++    </div>
++  );
++}
++
++function ZoneSection({ zone, data }: { zone: string; data: SenseData }) {
++  const s = data.snapshot[zone] ?? {};
++  const derived = data.snapshot[`${zone}-derived`] ?? {};
++  const extras: ReactElement[] = [];
++  if (derived.fruiting_score) extras.push(<ScoreTile key="score" entry={derived.fruiting_score} />);
++  if (derived.dew_point_c) extras.push(<Tile key="dew" metric="dew_point_c" entry={derived.dew_point_c} />);
++  if (s.dew_point_c && !derived.dew_point_c) extras.push(<Tile key="dew2" metric="dew_point_c" entry={s.dew_point_c} />);
++  if (derived.co2_trend_ppm_min) extras.push(<Tile key="trend" metric="co2_trend_ppm_min" entry={derived.co2_trend_ppm_min} />);
++  if (s.light_lux) extras.push(<Tile key="lux" metric="light_lux" entry={s.light_lux} />);
++
++  return (
++    <section className="cx-sense-section" aria-label={zone}>
++      <h3 className="cx-sense-title">{zone.replace(/-/g, " ")}</h3>
++      <div className="cx-sense-tiles">
++        {TILE_METRICS.map((m) => {
++          const e = s[m] ?? (m === "vpd_kpa" ? derived.vpd_kpa : undefined);
++          return e ? <Tile key={m} metric={m} entry={e} /> : null;
++        })}
++        {extras}
++      </div>
++      <div className="cx-sense-charts">
++        {CHART_METRICS.map((m) => (
++          <Sparkline
++            key={m}
++            title={`${label(m)}, ${data.hours} h`}
++            unit={s[m]?.unit ?? ""}
++            points={data.series[`${zone}|${m}`]}
++          />
++        ))}
++      </div>
++    </section>
++  );
++}
++
++function HoodSection({ zone, data }: { zone: string; data: SenseData }) {
++  const s = data.snapshot[zone] ?? {};
++  const d = data.snapshot[`${zone}-derived`] ?? {};
++  const tiles = HOOD_METRICS.map((m) => {
++    const e = d[m] ?? s[m];
++    return e ? <Tile key={m} metric={m} entry={e} /> : null;
++  }).filter(Boolean);
++  const laminar = d.hood_laminar_ok ?? s.hood_laminar_ok;
++  if (!tiles.length && !laminar) return null;
++  return (
++    <section className="cx-sense-section" aria-label="Flow hood">
++      <h3 className="cx-sense-title">Flow hood</h3>
++      <div className="cx-sense-tiles">
++        {tiles}
++        {laminar && <FlagTile metric="hood_laminar_ok" entry={laminar} goodWhenOn />}
++      </div>
++    </section>
++  );
++}
++
++function ControllerSection({ data }: { data: SenseData }) {
++  const p = data.snapshot.pi;
++  if (!p) return null;
++  return (
++    <section className="cx-sense-section" aria-label="Controller">
++      <h3 className="cx-sense-title">Controller</h3>
++      <div className="cx-sense-tiles">
++        {PI_METRICS.map((m) => (p[m] ? <Tile key={m} metric={m} entry={p[m]} /> : null))}
++        {p.undervoltage_now && <FlagTile metric="undervoltage_now" entry={p.undervoltage_now} goodWhenOn={false} />}
++        {p.throttled_now && <FlagTile metric="throttled_now" entry={p.throttled_now} goodWhenOn={false} />}
++      </div>
++    </section>
++  );
++}
++
++function Settings({ cfg, onSave }: { cfg: SenseConfig; onSave: (next: SenseConfig, token: string) => void }) {
++  const [draft, setDraft] = useState<SenseConfig>(cfg);
++  const [token, setToken] = useState<string>(() => getSenseToken());
++  useEffect(() => setDraft(cfg), [cfg]);
++
++  return (
++    <form
++      className="cx-sense-settings"
++      aria-label="Crowe Sense source"
++      onSubmit={(e) => {
++        e.preventDefault();
++        onSave(draft, token);
++      }}
++    >
++      <label className="cx-sense-field">
++        <span>Source</span>
++        <select
++          aria-label="Source"
++          value={draft.source}
++          onChange={(e) => setDraft({ ...draft, source: e.target.value as SenseSource })}
++        >
++          <option value="off">off</option>
++          <option value="direct">direct, on my network</option>
++          <option value="cloud">cloud, through the relay</option>
++        </select>
++      </label>
++      {draft.source === "direct" && (
++        <label className="cx-sense-field cx-sense-field-wide">
++          <span>Node address</span>
++          <input
++            aria-label="Node address"
++            type="url"
++            placeholder="http://100.123.229.57:8078"
++            value={draft.url}
++            onChange={(e) => setDraft({ ...draft, url: e.target.value })}
++          />
++        </label>
++      )}
++      {draft.source === "cloud" && (
++        <>
++          <label className="cx-sense-field">
++            <span>Node id</span>
++            <input
++              aria-label="Node id"
++              type="text"
++              placeholder="cs-a1b2c3"
++              value={draft.node}
++              onChange={(e) => setDraft({ ...draft, node: e.target.value })}
++            />
++          </label>
++          <label className="cx-sense-field cx-sense-field-wide">
++            <span>Relay</span>
++            <input
++              aria-label="Relay"
++              type="url"
++              value={draft.relay}
++              onChange={(e) => setDraft({ ...draft, relay: e.target.value })}
++            />
++          </label>
++          <label className="cx-sense-field cx-sense-field-wide">
++            <span>Token, only if not signed in</span>
++            <input
++              aria-label="Token"
++              type="password"
++              autoComplete="off"
++              value={token}
++              onChange={(e) => setToken(e.target.value)}
++            />
++          </label>
++        </>
++      )}
++      <button type="submit" className="cx-sense-save">
++        Save
++      </button>
++    </form>
++  );
++}
++
++/* ------------------------------------------------------------------ *
++ *  The tab
++ * ------------------------------------------------------------------ */
++
++export function SenseTab() {
++  const [cfg, setCfg] = useState<SenseConfig>(() => getSenseConfig());
++  const [data, setData] = useState<SenseData | null>(null);
++  const [error, setError] = useState<{ error: string; detail: string } | null>(null);
++  const [fetchedAt, setFetchedAt] = useState<number | null>(null);
++  const [clock, setClock] = useState<number>(() => Date.now());
++
++  const getToken = useCallback(() => useAuth.getState().accessToken(), []);
++
++  const load = useCallback(async () => {
++    if (cfg.source === "off") return;
++    try {
++      const d = await fetchData(6, { cfg, getToken });
++      setData(d);
++      setError(null);
++      setFetchedAt(Date.now());
++    } catch (e) {
++      setError(describeSenseError(e));
++    }
++  }, [cfg, getToken]);
++
++  useEffect(() => {
++    if (cfg.source === "off") {
++      setData(null);
++      setError(null);
++      return;
++    }
++    let alive = true;
++    const run = () => {
++      if (alive) void load();
++    };
++    run();
++    const poll = setInterval(run, REFRESH_MS);
++    const tick = setInterval(() => {
++      if (alive) setClock(Date.now());
++    }, CLOCK_MS);
++    return () => {
++      alive = false;
++      clearInterval(poll);
++      clearInterval(tick);
++    };
++  }, [cfg, load]);
++
++  const save = useCallback((next: SenseConfig, token: string) => {
++    setSenseToken(token);
++    setData(null);
++    setError(null);
++    setCfg(setSenseConfig(next));
++  }, []);
++
++  const zones = data ? growZones(data.snapshot) : [];
++  const hoods = data ? hoodZones(data.snapshot) : [];
++  const freshest = data ? freshestAge(data.snapshot, [...zones, ...hoods, "pi"]) : null;
++  const status: Status =
++    cfg.source === "off" ? "unpaired" : error ? "down" : !data ? "pending" : freshest !== null && freshest <= STALE_S ? "ok" : "down";
++  const statusText = { ok: "live", down: "no fresh readings", unpaired: "unpaired", pending: "reading" }[status];
++  const updated = fetchedAt ? ago((clock - fetchedAt) / 1000) : null;
++
++  return (
++    <div className="cortex-projects-wrap cx-sense" data-status={status}>
++      <header className="cx-sense-head">
++        <span className="cx-sense-dot" data-status={status} aria-hidden="true" />
++        <h2 className="cx-sense-h">Sense</h2>
++        <span className="cx-sense-meta" role="status" aria-label={`node status ${statusText}`}>
++          {data ? (
++            <>
++              <b>{data.node}</b>
++              {zones.length > 0 && <span> {zones.join(", ")}</span>}
++              <span> {data.count.toLocaleString()} readings</span>
++              {updated && <span> updated {updated}</span>}
++              <span className="cx-sense-status">{statusText}</span>
++            </>
++          ) : (
++            <span className="cx-sense-status">{statusText}</span>
++          )}
++        </span>
++      </header>
++
++      <Settings cfg={cfg} onSave={save} />
++
++      <div className="cortex-projects-section-body cx-sense-body">
++        {cfg.source === "off" && (
++          <EmptyState
++            title="No node paired."
++            hint="Choose direct for a node on your network or cloud for a relay node."
++          />
++        )}
++        {cfg.source !== "off" && error && (
++          <ErrorState
++            title={`Cannot read the node (${error.error}).`}
++            hint={error.detail}
++            action={{ label: "Try again", onClick: () => void load() }}
++          />
++        )}
++        {cfg.source !== "off" && !error && !data && <LoadingState title="Reading the node..." rows={2} />}
++        {cfg.source !== "off" && !error && data && (
++          <>
++            {zones.length === 0 && hoods.length === 0 && !data.snapshot.pi && (
++              <EmptyState title="The node answered with no readings." hint="Its sampler has not written a row yet." />
++            )}
++            {zones.map((z) => (
++              <ZoneSection key={z} zone={z} data={data} />
++            ))}
++            {hoods.map((z) => (
++              <HoodSection key={z} zone={z} data={data} />
++            ))}
++            <ControllerSection data={data} />
++            <p className="cx-sense-foot">
++              Every figure here was read from the node {updated ?? "just now"}. Nothing on this surface is sampled or assumed.
++            </p>
++          </>
++        )}
++      </div>
++    </div>
++  );
++}
+diff --git a/src/components/Workspace.tsx b/src/components/Workspace.tsx
+index 13d32c3..47374e0 100644
+--- a/src/components/Workspace.tsx
++++ b/src/components/Workspace.tsx
+@@ -6,6 +6,7 @@ import { useTabs, type TabKey } from "../csep/tabs";
+ import { ConversationCanvas } from "./ConversationCanvas";
+ import { ChatInput } from "./ChatInput";
+ import { FarmTab } from "./FarmTab";
++import { SenseTab } from "./SenseTab";
+ import { OperatingSurface } from "./OperatingSurface";
+ 
+ /* Heavy panels (Monaco editor, xterm.js) are lazy-loaded so the cold-start
+@@ -87,13 +88,14 @@ const VIEW_TABS: Partial<Record<TabKey, ComponentType>> = {
+ };
+ 
+ const PANEL_LABELS: Record<
+-  "ai" | "terminal" | "farm" | "code" | "workflow" | "notebook" | "browser" | "ide" | "workbench" | "agent",
++  "ai" | "terminal" | "farm" | "sense" | "code" | "workflow" | "notebook" | "browser" | "ide" | "workbench" | "agent",
+   string
+ > = {
+   workbench: "Workbench",
+   ai: "Conversation",
+   terminal: "Terminal",
+   farm: "Projects",
++  sense: "Sense",
+   code: "Code",
+   workflow: "Workflow",
+   notebook: "Notebook",
+@@ -111,7 +113,7 @@ function PanelContent({
+   onSendChat,
+ }: {
+   panelId: string;
+-  type: "ai" | "terminal" | "farm" | "code" | "workflow" | "notebook" | "browser" | "ide" | "workbench" | "agent";
++  type: "ai" | "terminal" | "farm" | "sense" | "code" | "workflow" | "notebook" | "browser" | "ide" | "workbench" | "agent";
+   payload?: Record<string, unknown>;
+   onSendChat: (msg: string) => void;
+ }) {
+@@ -135,6 +137,8 @@ function PanelContent({
+       );
+     case "farm":
+       return <FarmTab />;
++    case "sense":
++      return <SenseTab />;
+     case "code":
+       return (
+         <Suspense fallback={<PanelFallback label="editor" />}>
+diff --git a/src/config/sense.ts b/src/config/sense.ts
+new file mode 100644
+index 0000000..cde100c
+--- /dev/null
++++ b/src/config/sense.ts
+@@ -0,0 +1,114 @@
++/* Crowe Sense node configuration for Cortex.
++ *
++ * Mirrors config/farm.ts: a handful of localStorage keys, read on demand, no
++ * store. Two ways to reach a node, both speaking the same contract
++ * (crowe-sense/contracts/telemetry-v1.md):
++ *
++ *   direct  the node's own API on the operator's network or tailnet,
++ *           `http://<node>:8078`, no auth.
++ *   cloud   the relay, `https://sense.crowelogic.com/v1/nodes/<node>`, with the
++ *           operator's Crowe ID bearer.
++ *
++ * `off` is the honest default: the tab shows nothing rather than a demo.
++ * Tokens never live here; cloud mode borrows the Crowe ID access token from
++ * csep/auth at request time, with `crowe-sense-token` as a manual fallback for
++ * an operator who pastes one.
++ */
++
++export type SenseSource = "off" | "direct" | "cloud";
++
++export interface SenseConfig {
++  source: SenseSource;
++  /** Direct mode: base URL of the node API, e.g. http://100.123.229.57:8078 */
++  url: string;
++  /** Cloud mode: node id, e.g. cs-a1b2c3 */
++  node: string;
++  /** Cloud mode: relay base URL */
++  relay: string;
++}
++
++export const DEFAULT_RELAY = "https://sense.crowelogic.com";
++export const DEFAULT_DIRECT_URL = "http://crowe-sense.local:8078";
++
++const KEY_SOURCE = "crowe-sense-source";
++const KEY_URL = "crowe-sense-url";
++const KEY_NODE = "crowe-sense-node";
++const KEY_RELAY = "crowe-sense-relay";
++const KEY_TOKEN = "crowe-sense-token";
++
++function read(key: string, fallback: string): string {
++  try {
++    const v = localStorage.getItem(key);
++    return v === null ? fallback : v;
++  } catch {
++    return fallback;
++  }
++}
++
++function write(key: string, value: string): void {
++  try {
++    if (value === "") localStorage.removeItem(key);
++    else localStorage.setItem(key, value);
++  } catch {
++    /* storage unavailable: config is session-only */
++  }
++}
++
++function asSource(raw: string): SenseSource {
++  return raw === "direct" || raw === "cloud" ? raw : "off";
++}
++
++export function getSenseConfig(): SenseConfig {
++  return {
++    source: asSource(read(KEY_SOURCE, "off")),
++    url: read(KEY_URL, DEFAULT_DIRECT_URL),
++    node: read(KEY_NODE, ""),
++    relay: read(KEY_RELAY, DEFAULT_RELAY),
++  };
++}
++
++export function setSenseConfig(patch: Partial<SenseConfig>): SenseConfig {
++  const next = { ...getSenseConfig(), ...patch };
++  write(KEY_SOURCE, next.source);
++  write(KEY_URL, next.url.trim());
++  write(KEY_NODE, next.node.trim());
++  write(KEY_RELAY, next.relay.trim());
++  return getSenseConfig();
++}
++
++/** Manual bearer for cloud mode when no Crowe ID session is signed in. */
++export function getSenseToken(): string {
++  return read(KEY_TOKEN, "");
++}
++
++export function setSenseToken(token: string): void {
++  write(KEY_TOKEN, token.trim());
++}
++
++function stripSlash(base: string): string {
++  return base.trim().replace(/\/+$/, "");
++}
++
++/** Resolve a contract path against the configured source.
++ *
++ * Contract paths are what the node serves: `/health`, `/api/data?hours=6`,
++ * `/v1/latest`, `/v1/history?...`. The relay mounts the same reads under
++ * `/v1/nodes/<node>` without the `/v1` prefix, so `/v1/latest` becomes
++ * `/v1/nodes/<node>/latest` and `/api/data` stays `/api/data`.
++ */
++export function senseEndpoint(cfg: SenseConfig, path: string): string {
++  const p = path.startsWith("/") ? path : `/${path}`;
++  if (cfg.source === "direct") {
++    const base = stripSlash(cfg.url);
++    if (!base) throw new Error("direct mode needs the node address");
++    return `${base}${p}`;
++  }
++  if (cfg.source === "cloud") {
++    const relay = stripSlash(cfg.relay || DEFAULT_RELAY);
++    const node = cfg.node.trim();
++    if (!/^cs-[0-9a-f]{6}$/.test(node)) throw new Error("cloud mode needs a node id like cs-a1b2c3");
++    const rel = p.startsWith("/v1/") ? p.slice(3) : p;
++    return `${relay}/v1/nodes/${node}${rel}`;
++  }
++  throw new Error("no node paired");
++}
+diff --git a/src/csep/panel-graph.ts b/src/csep/panel-graph.ts
+index 31e3a27..822d6d2 100644
+--- a/src/csep/panel-graph.ts
++++ b/src/csep/panel-graph.ts
+@@ -54,6 +54,7 @@ const PANEL_TITLES: Record<PanelType, string> = {
+   ai: "Conversation",
+   terminal: "Terminal",
+   farm: "Projects",
++  sense: "Sense",
+   code: "Code",
+   workflow: "Workflow",
+   notebook: "Notebook",
+diff --git a/src/csep/panels.ts b/src/csep/panels.ts
+index d75cbbe..0dcb33a 100644
+--- a/src/csep/panels.ts
++++ b/src/csep/panels.ts
+@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
+ import { CROWE_CODE_URL } from "./bookmarks";
+ import { OLD_MYCLOGY_FARM_BASE } from "../config/farm";
+ 
+-export type PanelType = "ai" | "terminal" | "farm" | "code" | "workflow" | "notebook" | "browser" | "ide" | "workbench" | "agent";
++export type PanelType = "ai" | "terminal" | "farm" | "sense" | "code" | "workflow" | "notebook" | "browser" | "ide" | "workbench" | "agent";
+ 
+ /* Per-panel state. `payload` carries panel-type-specific extras.
+  * Today only the Browser panel uses it (initial URL), but the field is
+@@ -35,6 +35,7 @@ const FOCUS_EXISTING_ON_ADD: ReadonlySet<PanelType> = new Set<PanelType>([
+   "workflow",
+   "notebook",
+   "farm",
++  "sense",
+   "browser",
+   "ide",
+   "agent",
+diff --git a/src/csep/tabs.ts b/src/csep/tabs.ts
+index de0a593..d70c3d1 100644
+--- a/src/csep/tabs.ts
++++ b/src/csep/tabs.ts
+@@ -11,6 +11,7 @@ export type TabKey =
+   | "ide"
+   | "agent"
+   | "farm"
++  | "sense"
+   | "model"
+   | "tools"
+   | "memory"
+@@ -23,6 +24,7 @@ export type PanelTabKey =
+   | "conversation"
+   | "terminal"
+   | "farm"
++  | "sense"
+   | "code"
+   | "workflow"
+   | "notebook"
+@@ -34,6 +36,7 @@ export const PANEL_TABS: ReadonlySet<TabKey> = new Set<TabKey>([
+   "conversation",
+   "terminal",
+   "farm",
++  "sense",
+   "code",
+   "workflow",
+   "notebook",
+@@ -78,6 +81,7 @@ export const TAB_ORDER: TabKey[] = [
+   "ide",
+   "agent",
+   "farm",
++  "sense",
+   "model",
+   "tools",
+   "memory",
+@@ -97,6 +101,7 @@ export const TAB_LABELS: Record<TabKey, string> = {
+   ide: "IDE",
+   agent: "Agent",
+   farm: "Projects",
++  sense: "Sense",
+   model: "Model Lane",
+   tools: "Tools",
+   memory: "Memory",
+diff --git a/src/lib/sense-client.ts b/src/lib/sense-client.ts
+new file mode 100644
+index 0000000..00597fb
+--- /dev/null
++++ b/src/lib/sense-client.ts
+@@ -0,0 +1,171 @@
++/* Typed reads of the Crowe Sense telemetry contract v1.
++ *
++ * Every function resolves the configured source (config/sense.ts), applies a
++ * 10 s timeout, sends the Crowe ID bearer in cloud mode, and turns any failure
++ * into a SenseRequestError carrying the contract's `{error, detail}` pair so
++ * the surface can print the detail instead of a stack trace.
++ */
++import { getSenseConfig, getSenseToken, senseEndpoint, type SenseConfig } from "../config/sense";
++
++export interface SenseHealth {
++  ok: boolean;
++  node: string;
++  zone?: string;
++  readings: number;
++  last_ts: number | null;
++  age_s: number | null;
++  uptime_s?: number;
++  version?: string;
++}
++
++export interface SnapshotEntry {
++  value: number;
++  unit: string;
++  quality: string;
++  age: number;
++}
++
++/** GET /api/data: newest reading per zone and metric, plus 6 h series. */
++export interface SenseData {
++  generated: number;
++  node: string;
++  count: number;
++  hours: number;
++  snapshot: Record<string, Record<string, SnapshotEntry>>;
++  series: Record<string, [number, number][]>;
++}
++
++export interface SenseReading {
++  ts: number;
++  node: string;
++  zone: string;
++  sensor: string;
++  metric: string;
++  value: number;
++  unit: string;
++  quality?: string;
++}
++
++export interface SenseHistory {
++  metric: string;
++  zone: string;
++  unit: string;
++  points: [number, number][];
++}
++
++export class SenseRequestError extends Error {
++  readonly error: string;
++  readonly detail: string;
++  readonly status: number;
++  constructor(error: string, detail: string, status = 0) {
++    super(`${error}: ${detail}`);
++    this.name = "SenseRequestError";
++    this.error = error;
++    this.detail = detail;
++    this.status = status;
++  }
++}
++
++export interface ClientOptions {
++  cfg?: SenseConfig;
++  /** Crowe ID access token supplier for cloud mode. */
++  getToken?: () => Promise<string | null>;
++  timeoutMs?: number;
++  fetchImpl?: typeof fetch;
++}
++
++const DEFAULT_TIMEOUT_MS = 10_000;
++
++async function bearer(cfg: SenseConfig, opts: ClientOptions): Promise<string | null> {
++  if (cfg.source !== "cloud") return null;
++  if (opts.getToken) {
++    try {
++      const t = await opts.getToken();
++      if (t) return t;
++    } catch {
++      /* fall through to the manual token */
++    }
++  }
++  const manual = getSenseToken();
++  return manual || null;
++}
++
++async function request<T>(path: string, opts: ClientOptions = {}): Promise<T> {
++  const cfg = opts.cfg ?? getSenseConfig();
++  let url: string;
++  try {
++    url = senseEndpoint(cfg, path);
++  } catch (e) {
++    throw new SenseRequestError("unconfigured", e instanceof Error ? e.message : String(e));
++  }
++  const headers: Record<string, string> = { accept: "application/json" };
++  const token = await bearer(cfg, opts);
++  if (token) headers.authorization = `Bearer ${token}`;
++  else if (cfg.source === "cloud") {
++    throw new SenseRequestError("unauthorized", "cloud mode needs a Crowe ID sign-in or a pasted token");
++  }
++
++  const ctl = new AbortController();
++  const timer = setTimeout(() => ctl.abort(), opts.timeoutMs ?? DEFAULT_TIMEOUT_MS);
++  const doFetch = opts.fetchImpl ?? fetch;
++  let res: Response;
++  try {
++    res = await doFetch(url, { headers, signal: ctl.signal });
++  } catch (e) {
++    clearTimeout(timer);
++    const aborted = e instanceof Error && e.name === "AbortError";
++    throw new SenseRequestError(
++      aborted ? "timeout" : "unreachable",
++      aborted ? `no answer from ${url} within ${(opts.timeoutMs ?? DEFAULT_TIMEOUT_MS) / 1000} s` : `cannot reach ${url}: ${e instanceof Error ? e.message : String(e)}`,
++    );
++  }
++  clearTimeout(timer);
++
++  if (!res.ok) {
++    let error = `http_${res.status}`;
++    let detail = res.statusText || `status ${res.status}`;
++    try {
++      const body = (await res.json()) as Partial<{ error: string; detail: string }>;
++      if (body && typeof body.error === "string") error = body.error;
++      if (body && typeof body.detail === "string") detail = body.detail;
++    } catch {
++      /* non-JSON error body: keep the status text */
++    }
++    throw new SenseRequestError(error, detail, res.status);
++  }
++  try {
++    return (await res.json()) as T;
++  } catch {
++    throw new SenseRequestError("bad_response", `${url} did not return JSON`, res.status);
++  }
++}
++
++export function fetchHealth(opts?: ClientOptions): Promise<SenseHealth> {
++  return request<SenseHealth>("/health", opts);
++}
++
++export function fetchData(hours = 6, opts?: ClientOptions): Promise<SenseData> {
++  const h = Number.isFinite(hours) && hours > 0 ? hours : 6;
++  return request<SenseData>(`/api/data?hours=${h}`, opts);
++}
++
++export function fetchLatest(opts?: ClientOptions): Promise<SenseReading[]> {
++  return request<SenseReading[]>("/v1/latest", opts);
++}
++
++export function fetchHistory(
++  q: { metric: string; zone: string; hours?: number; step?: number },
++  opts?: ClientOptions,
++): Promise<SenseHistory> {
++  const params = new URLSearchParams({ metric: q.metric, zone: q.zone });
++  if (q.hours) params.set("hours", String(q.hours));
++  if (q.step) params.set("step", String(q.step));
++  return request<SenseHistory>(`/v1/history?${params.toString()}`, opts);
++}
++
++/** Text a surface can print for any failure, contract-shaped or not. */
++export function describeSenseError(e: unknown): { error: string; detail: string } {
++  if (e instanceof SenseRequestError) return { error: e.error, detail: e.detail };
++  if (e instanceof Error) return { error: "error", detail: e.message };
++  return { error: "error", detail: String(e) };
++}
+-- 
+2.50.1 (Apple Git-155)
+

@@ -25,3 +25,11 @@ Thumbs.db
 # Local config
 .env
 /etc/crowe/local.toml
+
+# Tauri app (app/): build products and the CocoaPods checkout, never source
+app/node_modules/
+app/src-tauri/target/
+app/src-tauri/gen/apple/Externals/
+app/src-tauri/gen/apple/build/
+app/src-tauri/gen/apple/*.xcodeproj/xcuserdata/
+app/src-tauri/gen/apple/*.xcodeproj/project.xcworkspace/xcuserdata/

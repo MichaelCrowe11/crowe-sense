@@ -1,0 +1,12 @@
+{
+  "name": "crowe-sense-relay",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Crowe Sense relay: signed telemetry ingest and Crowe ID gated reads, on Cloudflare Workers",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "deploy": "env -u CLOUDFLARE_API_TOKEN wrangler deploy",
+    "schema": "env -u CLOUDFLARE_API_TOKEN wrangler d1 execute crowe-sense --remote --file=../contracts/schema.sql"
+  }
+}

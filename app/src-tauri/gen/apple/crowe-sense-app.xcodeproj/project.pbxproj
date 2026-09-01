@@ -1,0 +1,479 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		00999909D3028C561B6DA63B /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A9EE3923AA1DBC2618EE64E /* CoreGraphics.framework */; };
+		0F5B18AB217830350C607AF7 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 497CC188517AD0930953CC48 /* UIKit.framework */; };
+		24D2773F4224D35AF1A4C19E /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 112B2592491676F4F056042E /* LaunchScreen.storyboard */; };
+		3843E3AA0AC724E61D2833A1 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 48DC5B1C4710D12A382BB201 /* MetalKit.framework */; };
+		3A89DB394DE1E1707E78EC07 /* assets in Resources */ = {isa = PBXBuildFile; fileRef = C6878EA7712CC4EDE0E18710 /* assets */; };
+		3CE1918E0B77F323DA0934AA /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58044DA943963288C63F003A /* Security.framework */; };
+		469C6F577B1ACE0C2F1FBB46 /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = FA97242EFAC1F33DE0C5D669 /* main.mm */; };
+		5CC4D7548D037AB0F8071406 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7871FE77822AD0896939058 /* WebKit.framework */; };
+		669D5EDE63194F81CDA438C0 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 674EE500962C03D7FA64BF68 /* QuartzCore.framework */; };
+		8138FBB43B161E5B4D28B034 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F3F09E1053FA06A59A070866 /* Assets.xcassets */; };
+		9E0BEB042386441C4A12B68C /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 576358D9AD40AC7622835CE3 /* Metal.framework */; };
+		BFF055432D5696B07C8BDF41 /* libapp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 54A7DCA7E6AC374C4003A729 /* libapp.a */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		112B2592491676F4F056042E /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
+		20819573EA1DE3C3926BDD5F /* crowe-sense-app_iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "crowe-sense-app_iOS.entitlements"; sourceTree = "<group>"; };
+		25D2A55A5C20DEFC8E50BFF2 /* main.rs */ = {isa = PBXFileReference; path = main.rs; sourceTree = "<group>"; };
+		48DC5B1C4710D12A382BB201 /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
+		497CC188517AD0930953CC48 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		54A7DCA7E6AC374C4003A729 /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
+		576358D9AD40AC7622835CE3 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		58044DA943963288C63F003A /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		674EE500962C03D7FA64BF68 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		6A9EE3923AA1DBC2618EE64E /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		A7871FE77822AD0896939058 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
+		AA895E39E0D6DC53C4529C29 /* lib.rs */ = {isa = PBXFileReference; path = lib.rs; sourceTree = "<group>"; };
+		C6878EA7712CC4EDE0E18710 /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = assets; sourceTree = SOURCE_ROOT; };
+		CD915D9F9004E9D568CAC84F /* crowe-sense-app_iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "crowe-sense-app_iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		DEC8EC5534EEF3F4AFBFA550 /* bindings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bindings.h; sourceTree = "<group>"; };
+		EBCE00FF23A029FA85F1929B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		F3F09E1053FA06A59A070866 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		FA97242EFAC1F33DE0C5D669 /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		DDC738E54256E97736D1070A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BFF055432D5696B07C8BDF41 /* libapp.a in Frameworks */,
+				00999909D3028C561B6DA63B /* CoreGraphics.framework in Frameworks */,
+				9E0BEB042386441C4A12B68C /* Metal.framework in Frameworks */,
+				3843E3AA0AC724E61D2833A1 /* MetalKit.framework in Frameworks */,
+				669D5EDE63194F81CDA438C0 /* QuartzCore.framework in Frameworks */,
+				3CE1918E0B77F323DA0934AA /* Security.framework in Frameworks */,
+				0F5B18AB217830350C607AF7 /* UIKit.framework in Frameworks */,
+				5CC4D7548D037AB0F8071406 /* WebKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		170989265E55533B34C00997 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				CD915D9F9004E9D568CAC84F /* crowe-sense-app_iOS.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		2C8F0E3BB7E609135C673441 /* crowe-sense-app */ = {
+			isa = PBXGroup;
+			children = (
+				FA97242EFAC1F33DE0C5D669 /* main.mm */,
+				D95AEAC397DE5A2D3517EBF9 /* bindings */,
+			);
+			path = "crowe-sense-app";
+			sourceTree = "<group>";
+		};
+		3BD44629149F931EA70FC4E1 = {
+			isa = PBXGroup;
+			children = (
+				C6878EA7712CC4EDE0E18710 /* assets */,
+				F3F09E1053FA06A59A070866 /* Assets.xcassets */,
+				112B2592491676F4F056042E /* LaunchScreen.storyboard */,
+				6F86E03138D69FA9412BCAFD /* crowe-sense-app_iOS */,
+				8FD65F3A63B661FEAC953455 /* Externals */,
+				8FD96E2E47784B78221D6097 /* Sources */,
+				DE2124A62AE888DEBB2A9AD2 /* src */,
+				F81A5679882DC6E01C3654B4 /* Frameworks */,
+				170989265E55533B34C00997 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		6F86E03138D69FA9412BCAFD /* crowe-sense-app_iOS */ = {
+			isa = PBXGroup;
+			children = (
+				20819573EA1DE3C3926BDD5F /* crowe-sense-app_iOS.entitlements */,
+				EBCE00FF23A029FA85F1929B /* Info.plist */,
+			);
+			path = "crowe-sense-app_iOS";
+			sourceTree = "<group>";
+		};
+		8FD65F3A63B661FEAC953455 /* Externals */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Externals;
+			sourceTree = "<group>";
+		};
+		8FD96E2E47784B78221D6097 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				2C8F0E3BB7E609135C673441 /* crowe-sense-app */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		D95AEAC397DE5A2D3517EBF9 /* bindings */ = {
+			isa = PBXGroup;
+			children = (
+				DEC8EC5534EEF3F4AFBFA550 /* bindings.h */,
+			);
+			path = bindings;
+			sourceTree = "<group>";
+		};
+		DE2124A62AE888DEBB2A9AD2 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				AA895E39E0D6DC53C4529C29 /* lib.rs */,
+				25D2A55A5C20DEFC8E50BFF2 /* main.rs */,
+			);
+			name = src;
+			path = ../../src;
+			sourceTree = "<group>";
+		};
+		F81A5679882DC6E01C3654B4 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				6A9EE3923AA1DBC2618EE64E /* CoreGraphics.framework */,
+				54A7DCA7E6AC374C4003A729 /* libapp.a */,
+				576358D9AD40AC7622835CE3 /* Metal.framework */,
+				48DC5B1C4710D12A382BB201 /* MetalKit.framework */,
+				674EE500962C03D7FA64BF68 /* QuartzCore.framework */,
+				58044DA943963288C63F003A /* Security.framework */,
+				497CC188517AD0930953CC48 /* UIKit.framework */,
+				A7871FE77822AD0896939058 /* WebKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		"TEMP_3C9B1CC2-7582-4290-BD30-B2624B18D3F5" /* arm64 */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = arm64;
+			sourceTree = "<group>";
+		};
+		"TEMP_D79783EA-E28A-4EB5-85DC-8FDE4021A47A" /* x86_64 */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = x86_64;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D54B25AC846E8A740C5C38A6 /* crowe-sense-app_iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 95B490A4199451F9DB7F9949 /* Build configuration list for PBXNativeTarget "crowe-sense-app_iOS" */;
+			buildPhases = (
+				C98BB2EE598420653BDB6F67 /* Build Rust Code */,
+				EEB5EE0D2164A95DBE2A44AA /* Sources */,
+				73CB3F4D380D93CA205D79EA /* Resources */,
+				DDC738E54256E97736D1070A /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "crowe-sense-app_iOS";
+			packageProductDependencies = (
+			);
+			productName = "crowe-sense-app_iOS";
+			productReference = CD915D9F9004E9D568CAC84F /* crowe-sense-app_iOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		74BE9DA3D7C1BCBBF28F4336 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					D54B25AC846E8A740C5C38A6 = {
+						DevelopmentTeam = 6QLMV9UCPP;
+					};
+				};
+			};
+			buildConfigurationList = E15E92E2BC80807A680CA587 /* Build configuration list for PBXProject "crowe-sense-app" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 3BD44629149F931EA70FC4E1;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 170989265E55533B34C00997 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D54B25AC846E8A740C5C38A6 /* crowe-sense-app_iOS */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		73CB3F4D380D93CA205D79EA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8138FBB43B161E5B4D28B034 /* Assets.xcassets in Resources */,
+				24D2773F4224D35AF1A4C19E /* LaunchScreen.storyboard in Resources */,
+				3A89DB394DE1E1707E78EC07 /* assets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		C98BB2EE598420653BDB6F67 /* Build Rust Code */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Build Rust Code";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Externals/x86_64/${CONFIGURATION}/libapp.a",
+				"$(SRCROOT)/Externals/arm64/${CONFIGURATION}/libapp.a",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "npm run -- tauri ios xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --framework-search-paths \"${FRAMEWORK_SEARCH_PATHS:?}\" --header-search-paths \"${HEADER_SEARCH_PATHS:?}\" --gcc-preprocessor-definitions \"${GCC_PREPROCESSOR_DEFINITIONS:-}\" --configuration ${CONFIGURATION:?} ${FORCE_COLOR} ${ARCHS:?}";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		EEB5EE0D2164A95DBE2A44AA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				469C6F577B1ACE0C2F1FBB46 /* main.mm in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		765AE48C3BBC988BE5F050CE /* debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = debug;
+		};
+		942995C17C9D3857E358D831 /* release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = release;
+		};
+		ACC5592A913B758735975FB2 /* debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ARCHS = (
+					arm64,
+				);
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "crowe-sense-app_iOS/crowe-sense-app_iOS.entitlements";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = "6QLMV9UCPP";
+				ENABLE_BITCODE = NO;
+				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\".\"",
+				);
+				INFOPLIST_FILE = "crowe-sense-app_iOS/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				"LIBRARY_SEARCH_PATHS[arch=arm64]" = "$(inherited) $(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
+				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = "$(inherited) $(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = io.crowelogic.crowesense;
+				PRODUCT_NAME = "Crowe Sense";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALID_ARCHS = arm64;
+			};
+			name = debug;
+		};
+		CBB2B6AED12F9980C9A96768 /* release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ARCHS = (
+					arm64,
+				);
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "crowe-sense-app_iOS/crowe-sense-app_iOS.entitlements";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = "6QLMV9UCPP";
+				ENABLE_BITCODE = NO;
+				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\".\"",
+				);
+				INFOPLIST_FILE = "crowe-sense-app_iOS/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				"LIBRARY_SEARCH_PATHS[arch=arm64]" = "$(inherited) $(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
+				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = "$(inherited) $(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = io.crowelogic.crowesense;
+				PRODUCT_NAME = "Crowe Sense";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALID_ARCHS = arm64;
+			};
+			name = release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		95B490A4199451F9DB7F9949 /* Build configuration list for PBXNativeTarget "crowe-sense-app_iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ACC5592A913B758735975FB2 /* debug */,
+				CBB2B6AED12F9980C9A96768 /* release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = debug;
+		};
+		E15E92E2BC80807A680CA587 /* Build configuration list for PBXProject "crowe-sense-app" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				765AE48C3BBC988BE5F050CE /* debug */,
+				942995C17C9D3857E358D831 /* release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 74BE9DA3D7C1BCBBF28F4336 /* Project object */;
+}

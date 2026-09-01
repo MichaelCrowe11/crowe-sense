@@ -1,0 +1,219 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Crowe Sense</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --bg:#0f1210; --panel:#171b18; --panel2:#1d221e; --line:#2a312c;
+  --ink:#e9e6dc; --muted:#8b9188; --gold:#c9a227;
+  --green:#5aa469; --amber:#d19a3a; --red:#c9563f;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+  -webkit-user-select:none;user-select:none}
+header{padding:calc(18px + env(safe-area-inset-top)) 20px 14px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+  background:linear-gradient(180deg,#141814,#0f1210)}
+h1{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:24px;margin:0;letter-spacing:.3px}
+h1 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;
+  background:var(--muted);margin-right:9px;vertical-align:middle;transition:.3s}
+.sub{color:var(--muted);font-size:12px;font-family:'JetBrains Mono',monospace}
+.sub b{color:var(--gold);font-weight:600}
+main{padding:18px 20px calc(34px + env(safe-area-inset-bottom))}
+.sec{font-family:'Fraunces',serif;font-size:14px;color:var(--gold);
+  text-transform:uppercase;letter-spacing:2px;margin:24px 0 10px;font-weight:600}
+.grid{display:grid;gap:12px}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g2{grid-template-columns:repeat(2,1fr)}
+@media(max-width:820px){.g4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.g4,.g2{grid-template-columns:repeat(2,1fr)}}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));
+  border:1px solid var(--line);border-radius:12px;padding:14px 16px;
+  box-shadow:0 1px 0 rgba(255,255,255,.03) inset,0 8px 20px rgba(0,0,0,.32)}
+.k{color:var(--muted);font-size:11px;letter-spacing:.4px;text-transform:uppercase}
+.v{font-family:'JetBrains Mono',monospace;font-size:27px;font-weight:600;margin-top:6px;line-height:1}
+.u{font-size:13px;color:var(--muted);font-weight:400;margin-left:5px}
+.qest{color:var(--amber);font-size:10px;margin-left:6px}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;
+  font-family:'JetBrains Mono',monospace;font-weight:600}
+.ok{background:rgba(90,164,105,.16);color:var(--green)}
+.bad{background:rgba(201,86,63,.18);color:var(--red)}
+.chartcard{background:linear-gradient(180deg,var(--panel2),var(--panel));
+  border:1px solid var(--line);border-radius:12px;padding:12px 14px 6px;
+  box-shadow:0 8px 20px rgba(0,0,0,.32)}
+.chartrow{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);
+  display:flex;justify-content:space-between;margin-top:4px}
+svg{display:block;width:100%;height:112px}
+.score{font-family:'JetBrains Mono',monospace;font-size:44px;font-weight:600}
+.foot{color:var(--muted);font-size:11px;margin-top:26px;font-family:'JetBrains Mono',monospace}
+.err{color:var(--red);font-size:13px;font-family:'JetBrains Mono',monospace}
+.gear{margin-left:auto;background:none;border:1px solid var(--line);color:var(--muted);
+  border-radius:8px;padding:4px 10px;font:12px 'JetBrains Mono',monospace;cursor:pointer}
+.gear:hover{color:var(--ink);border-color:var(--gold)}
+#settings{display:none;background:linear-gradient(180deg,var(--panel2),var(--panel));
+  border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:16px 0}
+#settings.open{display:block}
+#settings label{display:block;color:var(--muted);font-size:11px;letter-spacing:.4px;
+  text-transform:uppercase;margin:10px 0 4px}
+#settings input,#settings select{width:100%;background:var(--bg);color:var(--ink);
+  border:1px solid var(--line);border-radius:8px;padding:8px 10px;
+  font:13px 'JetBrains Mono',monospace}
+#settings .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#settings button.save{margin-top:12px;background:var(--gold);color:#1a1410;border:0;
+  border-radius:8px;padding:8px 14px;font:600 13px 'Inter',sans-serif;cursor:pointer}
+#settings .help{color:var(--muted);font-size:12px;margin-top:8px;line-height:1.5}
+</style></head><body>
+<header>
+  <h1><span class="dot" id="dot"></span>Crowe Sense</h1>
+  <span class="sub">node <b id="node">-</b> &nbsp; readings <b id="count">-</b>
+    &nbsp; updated <b id="upd">-</b></span>
+  <button class="gear" id="gear" type="button">source</button>
+</header>
+<main>
+<section id="settings">
+  <div class="row">
+    <div><label>Source</label>
+      <select id="s-source"><option value="direct">Direct: a node on my network</option><option value="cloud">Cloud: a node paired to my Crowe ID</option></select></div>
+    <div><label>Refresh window</label>
+      <select id="s-hours"><option value="1">1 hour</option><option value="6" selected>6 hours</option><option value="24">24 hours</option></select></div>
+  </div>
+  <div id="s-direct"><label>Node URL</label><input id="s-url" placeholder="http://192.168.1.40:8078 or http://100.x.y.z:8078"></div>
+  <div id="s-cloud">
+    <div class="row">
+      <div><label>Node id</label><input id="s-node" placeholder="cs-a1b2c3"></div>
+      <div><label>Relay</label><input id="s-relay" value="https://sense.crowelogic.com"></div>
+    </div>
+    <label>Crowe ID access token</label><input id="s-token" type="password" placeholder="paste from: crowe whoami --token">
+  </div>
+  <button class="save" id="s-save" type="button">Save and connect</button>
+  <p class="help">Direct reads the node's own API (crowe-api.service, port 8078). Cloud reads the relay, which only shows nodes paired to the Crowe ID that owns the token. See contracts/telemetry-v1.md.</p>
+</section>
+<div id="app"><p class="sub">reading the node...</p></div>
+</main>
+<script>
+const CM=["temperature_c","humidity_pct","co2_ppm"];
+const LBL={temperature_c:"Temperature",humidity_pct:"Humidity",co2_ppm:"CO2",
+  vpd_kpa:"VPD",light_lux:"Light",fruiting_score:"Fruiting score",
+  dew_point_c:"Dew point",co2_trend_ppm_min:"CO2 trend",
+  hood_face_velocity_fpm:"Face velocity",prefilter_load_pct:"Prefilter load",
+  prefilter_days_left:"Prefilter life",prefilter_dp_pa:"Prefilter dP",
+  hood_laminar_ok:"Laminar flow",soc_temp_c:"SoC temp",arm_clock_mhz:"ARM clock",
+  core_volts:"Core volts"};
+function fmt(v){return (Math.abs(v)>=100?Math.round(v):v.toFixed(2)).toLocaleString();}
+function tile(k,o){let q=o.quality!=="ok"?`<span class="qest">${o.quality}</span>`:"";
+  return `<div class="card"><div class="k">${LBL[k]||k}</div>
+    <div class="v">${fmt(o.value)}<span class="u">${o.unit}</span>${q}</div></div>`;}
+function chart(pts,unit){
+  if(!pts||pts.length<2)return '<svg></svg><div class="chartrow"><span>no data</span></div>';
+  const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);
+  const x0=xs[0],x1=xs[xs.length-1];let lo=Math.min(...ys),hi=Math.max(...ys);
+  if(hi-lo<1e-6){hi+=1;lo-=1;}const pad=(hi-lo)*.12;lo-=pad;hi+=pad;
+  const W=520,H=112,L=6,R=6,T=8,B=8;
+  const sx=v=>L+(v-x0)/(x1-x0||1)*(W-L-R);
+  const sy=v=>T+(1-(v-lo)/(hi-lo))*(H-T-B);
+  let d=pts.map((p,i)=>(i?"L":"M")+sx(p[0]).toFixed(1)+" "+sy(p[1]).toFixed(1)).join(" ");
+  let area=d+` L ${sx(x1).toFixed(1)} ${H-B} L ${sx(x0).toFixed(1)} ${H-B} Z`;
+  const last=ys[ys.length-1];
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c9a227" stop-opacity=".28"/>
+      <stop offset="1" stop-color="#c9a227" stop-opacity="0"/></linearGradient></defs>
+    <path d="${area}" fill="url(#g)"/>
+    <path d="${d}" fill="none" stroke="#c9a227" stroke-width="2"
+      stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${sx(x1).toFixed(1)}" cy="${sy(last).toFixed(1)}" r="3" fill="#e9e6dc"/>
+  </svg><div class="chartrow"><span>${lo.toFixed(1)}</span>
+    <span>min ${Math.min(...ys).toFixed(1)} / max ${Math.max(...ys).toFixed(1)} ${unit}</span>
+    <span>${hi.toFixed(1)}</span></div>`;
+}
+function boolBadge(o,goodWhen1){const on=o.value>=.5;const good=goodWhen1?on:!on;
+  return `<span class="badge ${good?'ok':'bad'}">${on?'YES':'NO'}</span>`;}
+// --- where to read: contracts/telemetry-v1.md ---------------------------------------
+const DEFAULT_CFG={source:"direct",url:"",node:"",relay:"https://sense.crowelogic.com",token:"",hours:6};
+function loadCfg(){try{return {...DEFAULT_CFG,...JSON.parse(localStorage.getItem("crowe-sense-cfg")||"{}")};}catch{return {...DEFAULT_CFG};}}
+function saveCfg(c){try{localStorage.setItem("crowe-sense-cfg",JSON.stringify(c));}catch{}}
+function endpoint(c,path){
+  if(c.source==="cloud"){const p=path.replace(/^\/v1(?=\/)/,"");return `${c.relay.replace(/\/+$/,"")}/v1/nodes/${c.node}${p}`;}
+  return `${(c.url||"").replace(/\/+$/,"")}${path}`;
+}
+async function getData(){
+  const c=loadCfg();
+  if(c.source==="direct"&&!c.url)throw new Error("No node URL yet. Open source and enter the node's address.");
+  if(c.source==="cloud"&&!(c.node&&c.token))throw new Error("No node paired yet. Open source and enter the node id and your Crowe ID token.");
+  const url=endpoint(c,`/api/data?hours=${c.hours||6}`);
+  const token=c.source==="cloud"?c.token:null;
+  const inv=(window.__TAURI__&&window.__TAURI__.core&&window.__TAURI__.core.invoke);
+  if(inv){return JSON.parse(await inv('fetch_json',{url,token}));}
+  const r=await fetch(url,{headers:token?{authorization:`Bearer ${token}`}:{},cache:"no-store"});
+  if(!r.ok){const e=await r.json().catch(()=>({detail:r.statusText}));throw new Error(`${r.status} ${e.detail||""}`);}
+  return await r.json();
+}
+// --- settings drawer -------------------------------------------------------------------
+function syncForm(){const c=loadCfg();
+  document.getElementById("s-source").value=c.source;document.getElementById("s-hours").value=String(c.hours||6);
+  document.getElementById("s-url").value=c.url;document.getElementById("s-node").value=c.node;
+  document.getElementById("s-relay").value=c.relay;document.getElementById("s-token").value=c.token;
+  document.getElementById("s-direct").style.display=c.source==="direct"?"":"none";
+  document.getElementById("s-cloud").style.display=c.source==="cloud"?"":"none";}
+document.getElementById("gear").addEventListener("click",()=>{document.getElementById("settings").classList.toggle("open");syncForm();});
+document.getElementById("s-source").addEventListener("change",e=>{const c=loadCfg();c.source=e.target.value;saveCfg(c);syncForm();});
+document.getElementById("s-save").addEventListener("click",()=>{
+  const c=loadCfg();c.source=document.getElementById("s-source").value;c.hours=Number(document.getElementById("s-hours").value)||6;
+  c.url=document.getElementById("s-url").value.trim();c.node=document.getElementById("s-node").value.trim();
+  c.relay=document.getElementById("s-relay").value.trim()||DEFAULT_CFG.relay;c.token=document.getElementById("s-token").value.trim();
+  saveCfg(c);document.getElementById("settings").classList.remove("open");load();});
+if(!loadCfg().url&&!loadCfg().node)document.getElementById("settings").classList.add("open");
+async function load(){
+  let d;
+  try{d=await getData();}catch(e){
+    document.getElementById('dot').style.background='#c9563f';
+    document.getElementById('app').innerHTML=
+      `<p class="err">Cannot read the node.<br><br>${e && e.message ? e.message : e}</p>`;
+    return;}
+  document.getElementById('node').textContent=d.node;
+  document.getElementById('count').textContent=d.count.toLocaleString();
+  document.getElementById('upd').textContent=new Date(d.generated*1000).toLocaleTimeString();
+  const S=d.snapshot,SE=d.series;let h="";
+  const zones=Object.keys(S).filter(z=>!z.endsWith("-derived")&&z!=="pi"&&!z.startsWith("hood"));
+  for(const t of zones){const s=S[t]||{};const der=S[t+"-derived"]||{};
+    h+=`<div class="sec">${t.replace('-',' ')}</div><div class="grid g4">`;
+    for(const m of ["temperature_c","humidity_pct","co2_ppm","vpd_kpa"])if(s[m])h+=tile(m,s[m]);
+    h+=`</div>`;
+    const dchips=[];
+    if(der.fruiting_score){const fv=der.fruiting_score.value;
+      const col=fv>=75?'var(--green)':fv>=50?'var(--amber)':'var(--red)';
+      dchips.push(`<div class="card"><div class="k">Fruiting score</div>
+        <div class="v"><span class="score" style="color:${col}">${fmt(fv)}</span></div></div>`);}
+    if(der.dew_point_c)dchips.push(tile("dew_point_c",der.dew_point_c));
+    if(der.co2_trend_ppm_min)dchips.push(tile("co2_trend_ppm_min",der.co2_trend_ppm_min));
+    if(s.light_lux)dchips.push(tile("light_lux",s.light_lux));
+    if(dchips.length)h+=`<div class="grid g4" style="margin-top:12px">${dchips.join("")}</div>`;
+    h+=`<div class="grid g2" style="margin-top:12px">`;
+    for(const m of CM){const key=t+"|"+m;
+      h+=`<div class="chartcard"><div class="k">${LBL[m]} &middot; 6h</div>
+        ${chart(SE[key],s[m]?s[m].unit:"")}</div>`;}
+    h+=`</div>`;
+  }
+  const hd=S["hood-1"]||{},hde=S["hood-1-derived"]||{};
+  h+=`<div class="sec">flow hood</div><div class="grid g4">`;
+  if(hde.hood_face_velocity_fpm)h+=tile("hood_face_velocity_fpm",hde.hood_face_velocity_fpm);
+  if(hde.prefilter_load_pct)h+=tile("prefilter_load_pct",hde.prefilter_load_pct);
+  if(hde.prefilter_days_left)h+=tile("prefilter_days_left",hde.prefilter_days_left);
+  if(hd.prefilter_dp_pa)h+=tile("prefilter_dp_pa",hd.prefilter_dp_pa);
+  h+=`</div>`;
+  if(hde.hood_laminar_ok)h+=`<div style="margin-top:10px">Laminar flow ${boolBadge(hde.hood_laminar_ok,true)}</div>`;
+  const p=S["pi"]||{};
+  h+=`<div class="sec">pi health</div><div class="grid g4">`;
+  if(p.soc_temp_c)h+=tile("soc_temp_c",p.soc_temp_c);
+  if(p.arm_clock_mhz)h+=tile("arm_clock_mhz",p.arm_clock_mhz);
+  if(p.core_volts)h+=tile("core_volts",p.core_volts);
+  h+=`</div>`;
+  if(p.undervoltage_now)h+=`<div style="margin-top:10px">Undervoltage ${boolBadge(p.undervoltage_now,false)}</div>`;
+  h+=`<div class="foot">Crowe Sense &middot; node ${d.node}${d.zone?" &middot; zone "+d.zone:""} &middot; ${loadCfg().source==="cloud"?"via relay":"direct"} &middot; refresh 15s</div>`;
+  document.getElementById('app').innerHTML=h;
+  document.getElementById('dot').style.background='#5aa469';
+}
+load();setInterval(load,15000);
+</script></body></html>

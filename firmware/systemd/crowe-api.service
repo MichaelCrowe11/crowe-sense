@@ -1,0 +1,22 @@
+[Unit]
+Description=Crowe Sense local read API and kiosk dashboard (:8078)
+Documentation=https://github.com/MichaelCrowe11/crowe-sense
+After=network.target crowe-sampler.service
+ConditionPathExists=/etc/crowe/node.toml
+
+[Service]
+Type=simple
+User=crowe
+Group=crowe
+ExecStart=/usr/local/bin/crowe-api
+Restart=on-failure
+RestartSec=5
+MemoryMax=128M
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/mnt/crowe
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

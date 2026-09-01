@@ -1,12 +1,17 @@
-"""Uploader — drains raw_samples into signed gzipped batches and PUTs to S3.
+"""Uploader: drains raw_samples into signed gzipped batches and pushes them off the node.
 
-Marks rows sent=1 only after the PUT returns 2xx. Batches drain every
-30 s or when 1000 rows are pending, whichever first.
+Two targets. The relay (contracts/telemetry-v1.md, `POST /v1/ingest`, the default) gets
+contract readings as NDJSON with a base64 Ed25519 signature over the gzipped body. The
+S3 path (the original design) is kept for sites that run their own bucket.
+
+Marks rows sent=1 only after the server returns 2xx, so a rejected batch is retried,
+never lost. Batches drain every 30 s or when 1000 rows are pending, whichever first.
 """
 
 from __future__ import annotations
 
 import argparse
+import base64
 import gzip
 import json
 import logging
@@ -15,6 +20,7 @@ import sqlite3
 import time
 from collections.abc import Iterable
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 
 import httpx
@@ -23,6 +29,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from crowe import config
 from crowe.db import open_db
+from crowe.metrics import metric_for, unit_for
 from crowe.routing import current_uplink
 
 log = logging.getLogger("crowe.uploader")
@@ -73,6 +80,58 @@ def build_batch(rows: Iterable[tuple], key: Ed25519PrivateKey) -> Batch:
     return Batch(ids=ids, body=gz, signature=sig)
 
 
+def iso_to_unix(ts: str) -> float:
+    """The sampler stores ISO 8601 UTC text; the contract carries unix seconds."""
+    return datetime.fromisoformat(ts.replace("Z", "+00:00")).timestamp()
+
+
+def to_reading(row: tuple, node_id: str, zone: str) -> dict:
+    """A raw_samples row -> a contract reading (contracts/reading.schema.json)."""
+    _rid, ts, sensor, channel, value, unit = row
+    return {
+        "ts": round(iso_to_unix(ts), 3),
+        "node": node_id,
+        "zone": zone,
+        "sensor": sensor,
+        "metric": metric_for(channel),
+        "value": float(value),
+        "unit": unit_for(unit),
+        "quality": "ok",
+    }
+
+
+def build_relay_batch(rows: Iterable[tuple], key: Ed25519PrivateKey, node_id: str, zone: str) -> Batch:
+    ids: list[int] = []
+    lines: list[bytes] = []
+    for row in rows:
+        ids.append(row[0])
+        lines.append(json.dumps(to_reading(row, node_id, zone), separators=(",", ":")).encode())
+    gz = gzip.compress(b"\n".join(lines) + b"\n", mtime=0)
+    return Batch(ids=ids, body=gz, signature=key.sign(gz))
+
+
+def relay_upload(client: httpx.Client, relay_url: str, batch: Batch, node_id: str) -> bool:
+    try:
+        resp = client.post(
+            f"{relay_url}/v1/ingest",
+            content=batch.body,
+            headers={
+                "Content-Type": "application/x-ndjson",
+                "Content-Encoding": "gzip",
+                "X-Crowe-Node": node_id,
+                "X-Crowe-Signature": base64.b64encode(batch.signature).decode(),
+            },
+            timeout=30.0,
+        )
+    except httpx.HTTPError:
+        log.exception("relay upload failed (network)")
+        return False
+    if resp.status_code // 100 != 2:
+        log.warning("relay rejected batch: %s %s", resp.status_code, resp.text[:200])
+        return False
+    return True
+
+
 def mark_sent(conn: sqlite3.Connection, ids: list[int]) -> None:
     if not ids:
         return
@@ -121,9 +180,16 @@ def drain_once(
     rows = fetch_pending(conn, BATCH_ROWS)
     if not rows:
         return 0
-    batch = build_batch(rows, key)
-    url = s3_url(cfg, int(time.time()), rows[-1][0])
-    if upload(client, url, batch, cfg.node_id):
+    if cfg.relay_url:
+        batch = build_relay_batch(rows, key, cfg.node_id, cfg.zone)
+        ok = relay_upload(client, cfg.relay_url, batch, cfg.node_id)
+    elif cfg.s3 is not None:
+        batch = build_batch(rows, key)
+        ok = upload(client, s3_url(cfg, int(time.time()), rows[-1][0]), batch, cfg.node_id)
+    else:
+        log.error("no upload target: set [relay] url or [s3] bucket in node.toml")
+        return 0
+    if ok:
         mark_sent(conn, batch.ids)
         return len(batch.ids)
     return 0

@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "crowe-sense-relay",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-01",
+  "workers_dev": false,
+  // The cloud half of contracts/telemetry-v1.md. Nodes push signed batches here;
+  // every app reads from here with a Crowe ID. Deploy (Michael, from this dir):
+  //   env -u CLOUDFLARE_API_TOKEN npx wrangler d1 create crowe-sense        # once; paste the id below
+  //   env -u CLOUDFLARE_API_TOKEN npx wrangler d1 execute crowe-sense --remote --file=../contracts/schema.sql
+  //   env -u CLOUDFLARE_API_TOKEN npx wrangler r2 bucket create crowe-sense-raw   # STANDARD class
+  //   env -u CLOUDFLARE_API_TOKEN npx wrangler deploy
+  "routes": [{ "pattern": "sense.crowelogic.com/*", "zone_name": "crowelogic.com" }],
+  "d1_databases": [{ "binding": "DB", "database_name": "crowe-sense", "database_id": "REPLACE_WITH_D1_ID" }],
+  "r2_buckets": [{ "binding": "RAW", "bucket_name": "crowe-sense-raw" }],
+  "observability": { "enabled": true },
+  "vars": {
+    "ISSUER": "https://id.crowelogic.com/realms/crowe",
+    "MAX_BODY_BYTES": "5242880",
+    "STALE_AFTER_S": "180"
+  }
+}

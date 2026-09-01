@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "crowe-sense"
-version = "0.1.0"
+version = "0.2.0"
 description = "Firmware for the Crowe Sensor environmental monitoring node"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -33,10 +33,14 @@ crowe-uploader  = "crowe.uploader:main"
 crowe-watchdog  = "crowe.watchdog:main"
 crowe-health    = "crowe.health:main"
 crowe-provision = "crowe.provision:main"
+crowe-api       = "crowe.api:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["crowe*"]
+
+[tool.setuptools.package-data]
+crowe = ["dashboard.html"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

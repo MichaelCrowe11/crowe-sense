@@ -19,6 +19,6 @@ CREATE TABLE IF NOT EXISTS readings (
   value    REAL NOT NULL,
   unit     TEXT NOT NULL,
   quality  TEXT NOT NULL DEFAULT 'ok',
-  PRIMARY KEY (node_id, zone, metric, ts)
+  PRIMARY KEY (node_id, zone, metric, sensor, ts)
 ) WITHOUT ROWID;
 CREATE INDEX IF NOT EXISTS idx_readings_node_metric_ts ON readings(node_id, metric, ts);
