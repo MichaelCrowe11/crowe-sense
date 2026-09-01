@@ -1,4 +1,4 @@
-CROWE SENSE OUTREACH, REVIEW COPY, 2026-09-01
+CROWE SENSE OUTREACH, REVIEW COPY, 2026-09-01 (revised)
 Thirty drafts. From: michael@crowelogic.com. The investor report PDF is attached to every send.
 
 ==================================================================
@@ -14,13 +14,13 @@ Caveat: Fund IV mandate is broad frontier agrifood tech, not CEA-specific; confi
 ---
 
 To: (named person, verified this week)  
-Subject: Crowe Sense, a $449 sensing node for grow rooms
+Subject: Crowe Sense: a grow-room sensing node, pre-seed
 
 You track agrifood infrastructure deals. This is the smallest unit of that infrastructure: a node a grower buys once that makes a room legible, with the data contract and the apps already built around it.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms.
 
 I am raising $175,000 on a SAFE to put twenty-five nodes in ten growers' rooms and prove the data. Cloud and analytics are already covered by credits, so the money is hardware and people. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
@@ -48,13 +48,13 @@ Caveat: Stated initial check is well above a $150k-$250k raise; likely only fits
 ---
 
 To: (named person, verified this week)  
-Subject: Crowe Sense: a note ahead of the round you would actually do
+Subject: Crowe Sense: an early note ahead of a later round
 
 I know your first checks start well above what I am raising now. I am writing early on purpose: your thesis is digital and data infrastructure across the agrifood chain, and the part of Crowe Sense that matters is the relay and the contract every surface reads, not the sensor.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms.
 
 I am raising $175,000 on a SAFE to put twenty-five nodes in ten growers' rooms and prove the data. Cloud and analytics are already covered by credits, so the money is hardware and people. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
@@ -82,13 +82,13 @@ Caveat: Third-party trackers report average seed rounds near $5M-$6M; confirm ap
 ---
 
 To: (named person, verified this week)  
-Subject: Crowe Sense: the CEA crop nobody puts sensors on
+Subject: Crowe Sense: sensing for controlled environment mushroom growing
 
 You fund controlled environment agriculture. Mushrooms are the CEA crop that runs on humidity and CO2 more than any other and has almost no purpose-built sensing. Crowe Sense is built by a grower for that room.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms.
 
 I am raising $175,000 on a SAFE to put twenty-five nodes in ten growers' rooms and prove the data. Cloud and analytics are already covered by credits, so the money is hardware and people. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
@@ -122,7 +122,7 @@ Your stated mission is sensor-based farm management, and Artemis is in your port
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms.
 
 I am raising $175,000 on a SAFE to put twenty-five nodes in ten growers' rooms and prove the data. Cloud and analytics are already covered by credits, so the money is hardware and people. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
@@ -156,7 +156,7 @@ You name controlled environment agriculture as a theme you back. Your recent dea
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms.
 
 I am raising $175,000 on a SAFE to put twenty-five nodes in ten growers' rooms and prove the data. Cloud and analytics are already covered by credits, so the money is hardware and people. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
@@ -184,13 +184,13 @@ Caveat: Own site now emphasizes early-revenue, de-risked technology; verify appe
 ---
 
 To: (named person, verified this week)  
-Subject: Crowe Sense: the de-risking is the pilot, and here is what it measures
+Subject: Crowe Sense: precision sensing for indoor mushroom rooms
 
 EarthOptics is in your portfolio, so you have underwritten physical agricultural sensing before. Your site now asks for de-risked, early-revenue companies. This raise is the de-risking: twenty-five nodes in ten rooms, a published provenance test on every node's first week, and twenty labelled harvests by day 180.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms.
 
 I am raising $175,000 on a SAFE to put twenty-five nodes in ten growers' rooms and prove the data. Cloud and analytics are already covered by credits, so the money is hardware and people. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
@@ -218,13 +218,13 @@ Caveat: Third-party trackers report average seed rounds near $5M-$6M; confirm th
 ---
 
 To: (named person, verified this week)  
-Subject: Crowe Sense: the hardware under indoor-farming software
+Subject: Crowe Sense: the instrument under indoor-farming software
 
 Source is in your fund for indoor farming software, alongside robotics hardware. Crowe Sense is the instrument that kind of software wishes it had underneath: a node that writes measured room readings into the same store the grower's own records live in.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms.
 
 I am raising $175,000 on a SAFE to put twenty-five nodes in ten growers' rooms and prove the data. Cloud and analytics are already covered by credits, so the money is hardware and people. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
@@ -252,13 +252,13 @@ Caveat: Confirmed via Feb 2026 profile: firm explicitly tries to avoid anything 
 ---
 
 To: (named person, verified this week)  
-Subject: Crowe Sense: the product is the contract, the sensor is $278 of parts
+Subject: Crowe Sense: one data contract, six apps, and the sensor that feeds them
 
 I read that you steer away from hardware-intensive deals, so let me put the software first, because it is the product. One telemetry contract, served on the node and in the cloud, read by six surfaces the company already ships. The sensor node is $278 of off-the-shelf parts in a printed box; anyone could build one. Nobody else has the contract, the apps, or the 43 cited condition bands.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms.
 
 I am raising $175,000 on a SAFE to put twenty-five nodes in ten growers' rooms and prove the data. Cloud and analytics are already covered by credits, so the money is hardware and people. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
@@ -286,13 +286,13 @@ Caveat: Operates more as a challenge/accelerator platform than a direct-check VC
 ---
 
 To: (named person, verified this week)  
-Subject: Crowe Sense: which challenge cycle fits?
+Subject: Crowe Sense: entry for your next challenge
 
 Your challenge model surfaces sensor-and-data farm technology, which is exactly what this is. I would rather enter the right cycle than send a generic deck.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms.
 
 I am raising $175,000 on a SAFE to put twenty-five nodes in ten growers' rooms and prove the data. Cloud and analytics are already covered by credits, so the money is hardware and people. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
@@ -320,13 +320,13 @@ Caveat: The $1M figure applies to challenge finalists only, not a standard check
 ---
 
 To: (named person, verified this week)  
-Subject: Crowe Sense for the THRIVE Global Impact Challenge
+Subject: Crowe Sense: Global Impact Challenge entry
 
 Cellar Insights is a storage-monitoring sensor company you backed this January; Crowe Sense is the same shape one step upstream, in the growing room. The Global Impact Challenge funds early agrifood hardware and software at exactly my stage.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms.
 
 I am raising $175,000 on a SAFE to put twenty-five nodes in ten growers' rooms and prove the data. Cloud and analytics are already covered by credits, so the money is hardware and people. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
@@ -354,13 +354,13 @@ Caveat: Check size not publicly disclosed; latest confirmed investment (FORT Rob
 ---
 
 To: (named person, verified this week)  
-Subject: Crowe Sense: firmware-complete to pilot manufacturing
+Subject: Crowe Sense: hardware pre-seed, firmware complete
 
 You fund hardware and nothing else, at the stage where the firmware passes its tests and no unit has shipped. That is where I am: 51 firmware tests, a signed uploader, a parametric enclosure, and zero nodes in rooms.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms.
 
 I am raising $175,000 on a SAFE to put twenty-five nodes in ten growers' rooms and prove the data. Cloud and analytics are already covered by credits, so the money is hardware and people. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
@@ -388,13 +388,13 @@ Caveat: Six-month residency, rolling admissions; confirmed active with an Aug 20
 ---
 
 To: (named person, verified this week)  
-Subject: Crowe Sense: applying to HAX this week
+Subject: Crowe Sense: HAX application
 
 Your first check, $150,000 cash plus $100,000 of engineering and lab time, is sized almost exactly to what this company needs: the enclosure's thermal validation, a calibration jig for four sensors, and a small-batch run of twenty-five units. I have the firmware, the relay, the apps and the contract; I do not have a mechanical engineer.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms.
 
 I am raising $175,000 on a SAFE to put twenty-five nodes in ten growers' rooms and prove the data. Cloud and analytics are already covered by credits, so the money is hardware and people. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
@@ -422,13 +422,13 @@ Caveat: Portfolio skews toward large energy/industrial hardware at bigger checks
 ---
 
 To: (named person, verified this week)  
-Subject: Crowe Sense: a small climate-hardware note
+Subject: Crowe Sense: climate hardware for grow rooms, pre-seed
 
 This is smaller than what you usually fund, so I will be brief. Grow rooms are climate machines: CO2, humidity and temperature held against a band, all day, all year, at energy cost nobody measures. Crowe Sense measures it, judged against documented practice.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms.
 
 I am raising $175,000 on a SAFE to put twenty-five nodes in ten growers' rooms and prove the data. Cloud and analytics are already covered by credits, so the money is hardware and people. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
@@ -456,13 +456,13 @@ Caveat: 2026 cohort applications opened March 19, 2026; current published focus 
 ---
 
 To: (named person, verified this week)  
-Subject: Crowe Sense for Techstars Future of Food
+Subject: Crowe Sense: Future of Food application
 
 Your published focus runs downstream of the farm, so here is the part of Crowe Sense that sits on your side: the desktop app already traces a lot from spawn to harvest and ties it to the room it grew in, the way MGAP 12.1a asks, and Crowe Sense writes the measured room readings into that same record. Traceability that includes the environment, not just the paperwork.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms.
 
 I am raising $175,000 on a SAFE to put twenty-five nodes in ten growers' rooms and prove the data. Cloud and analytics are already covered by credits, so the money is hardware and people. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
@@ -490,13 +490,13 @@ Caveat: Not hardware-exclusive and highly competitive; pitch needs to lean on th
 ---
 
 To: (named person, verified this week)  
-Subject: Crowe Sense: applying under the physical hardware and agriculture RFS
+Subject: Crowe Sense: YC application, physical hardware and agriculture
 
 Your 2026 requests name agriculture robotics and physical hardware. Crowe Sense is a $449 grow-room sensing node with the software already built around it, applying from a founder who has grown the crop for twenty years.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms.
 
 I am raising $175,000 on a SAFE to put twenty-five nodes in ten growers' rooms and prove the data. Cloud and analytics are already covered by credits, so the money is hardware and people. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
@@ -524,13 +524,13 @@ Caveat: Renamed from Elemental Excelerator; historically larger checks than pre-
 ---
 
 To: (named person, verified this week)  
-Subject: Crowe Sense: the pilot is the first deployment
+Subject: Crowe Sense: first deployment of a grow-room sensing node
 
 You fund food and agriculture climate hardware moving from prototype into real-world deployment. That is this raise in one line: twenty-five nodes into ten growers' rooms, a published provenance test on every node's first week.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms.
 
 I am raising $175,000 on a SAFE to put twenty-five nodes in ten growers' rooms and prove the data. Cloud and analytics are already covered by credits, so the money is hardware and people. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
@@ -558,13 +558,13 @@ Caveat: Tucson-based, not Phoenix; aggregate $66M deployed across 165+ portfolio
 ---
 
 To: (named person, verified this week)  
-Subject: Crowe Sense: a Phoenix hardware founder asking to pitch
+Subject: Crowe Sense: request to pitch
 
 I am a Phoenix grower with a hardware and software company at pre-seed, and you are the state's deepest bench of accredited investors. I would like to pitch to the group.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms.
 
 I am raising $175,000 on a SAFE to put twenty-five nodes in ten growers' rooms and prove the data. Cloud and analytics are already covered by credits, so the money is hardware and people. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
@@ -592,13 +592,13 @@ Caveat: No check size publicly disclosed; verify current sector appetite for phy
 ---
 
 To: (named person, verified this week)  
-Subject: Crowe Sense: asking to pitch at Canyon Angels
+Subject: Crowe Sense: request to pitch
 
 You meet in Phoenix, I build in Phoenix, and my first customers are Arizona growers. This is the first local stop I want to make.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms.
 
 I am raising $175,000 on a SAFE to put twenty-five nodes in ten growers' rooms and prove the data. Cloud and analytics are already covered by credits, so the money is hardware and people. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
@@ -626,13 +626,13 @@ Caveat: Not a check-writer; apply to pitch or attend the annual event (next flag
 ---
 
 To: (named person, verified this week)  
-Subject: Crowe Sense: applying to pitch at Venture Madness
+Subject: Crowe Sense: Venture Madness application
 
 I would like to pitch Crowe Sense at the next Venture Madness. It is a physical product with the software done, from a founder the Arizona growing community already knows.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
 What are the application dates and requirements for the next event?
 
@@ -658,13 +658,13 @@ Caveat: Historically software/consumer-tech leaning; High Tide has offered up to
 ---
 
 To: (named person, verified this week)  
-Subject: Crowe Sense: a local lead, and High Tide
+Subject: Crowe Sense: a Phoenix hardware and software company, pre-seed
 
 You are Arizona's most active venture firm two years running, and High Tide is built for the stage I am at: product built, validation not yet run. I know your history leans software; the software here is six surfaces on one contract, and the hardware is what feeds it.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms.
 
 I am raising $175,000 on a SAFE to put twenty-five nodes in ten growers' rooms and prove the data. Cloud and analytics are already covered by credits, so the money is hardware and people. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
@@ -692,13 +692,13 @@ Caveat: Added as a verified active substitute; third-party listings cite $250k-$
 ---
 
 To: (named person, verified this week)  
-Subject: Crowe Sense: advanced manufacturing and sustainability, in Phoenix
+Subject: Crowe Sense: request to present
 
 You list advanced manufacturing and sustainability as target sectors. Crowe Sense is a printed-enclosure sensing node made in Phoenix for the rooms that grow food indoors.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms.
 
 I am raising $175,000 on a SAFE to put twenty-five nodes in ten growers' rooms and prove the data. Cloud and analytics are already covered by credits, so the money is hardware and people. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
@@ -726,13 +726,13 @@ Caveat: Sector thesis is stated as B2B software/AI only; a hardware/CEA sensor p
 ---
 
 To: (named person, verified this week)  
-Subject: Crowe Sense: probably outside your mandate, asking anyway
+Subject: Crowe Sense: Launch Fund fit
 
 Your Launch Fund is sized exactly to this raise and invests in pre-revenue companies, and it states B2B software only. The honest description of Crowe Sense is software with a sensor attached: one contract, a cloud relay, six apps, and a $278 node that feeds them. If a sensor in the box puts it outside the mandate, tell me and I will stop.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms.
 
 I am raising $175,000 on a SAFE to put twenty-five nodes in ten growers' rooms and prove the data. Cloud and analytics are already covered by credits, so the money is hardware and people. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
@@ -760,13 +760,13 @@ Caveat: Transitioning into a rebranded 'Spark Surprise' hub in 2026; confirm cur
 ---
 
 To: (named person, verified this week)  
-Subject: Crowe Sense: space and mentors for a sensor enclosure pilot
+Subject: Crowe Sense: bench space and mentors for a pilot run
 
 This is not a capital ask. I am building a hardware sensing node and need bench space, mentors who have taken a printed enclosure into a small production run, and a place to receive twenty-five units' worth of parts.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
 Is the program taking hardware companies through the Spark Surprise transition, and what does joining look like?
 
@@ -792,13 +792,13 @@ Caveat: Since Aug 2024 the lead founder must be an enrolled student, which likel
 ---
 
 To: (named person, verified this week)  
-Subject: Crowe Sense: an eligibility question
+Subject: Crowe Sense: eligibility question
 
 Since 2024 the lead founder has to be an enrolled student, which I am not. I have a hardware and software company at exactly the stage your prize funding serves, and I am open to bringing on a student co-founder in a real role.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
 Is there a path for that, and what would the student's role need to be for the team to be eligible?
 
@@ -824,13 +824,13 @@ Caveat: Applicant must be Crowe Logic Inc itself as a majority US-owned, for-pro
 ---
 
 To: (named person, verified this week)  
-Subject: Topic fit question: grow-room environmental sensing node
+Subject: USDA SBIR Phase I topic fit: grow-room environmental sensing node
 
 I am preparing a Phase I application for a Raspberry Pi based environmental sensing node for indoor mushroom and controlled environment cultivation: NDIR CO2, temperature, humidity, VOC and light, judged against documented cultivation practice, with a provenance test that rejects data a sensor could not have produced.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
 Which current topic area is the right home for this, and is the $175,000 ceiling the one to plan against for it? Applicant is Crowe Logic, Inc., a majority US-owned for-profit small business.
 
@@ -856,13 +856,13 @@ Caveat: 6 to 18 month project period, no cost share; recurring deadlines includi
 ---
 
 To: (named person, verified this week)  
-Subject: Project Pitch: Crowe Sense, verifiable environmental sensing for indoor agriculture
+Subject: NSF Project Pitch: Crowe Sense, verifiable environmental sensing for indoor agriculture
 
-The technical innovation is not the sensors; it is the provenance layer. Grow-room telemetry today cannot be told from a plausible simulation, and I proved that on my own data. Crowe Sense pairs a low-cost multi-sensor node with a structural test of the variation (day-to-day offset against the noise floor, residual autocorrelation) that rejects data a physical room could not have produced, and a practice envelope that judges readings against cited grower knowledge. The Phase I question is whether that test holds across sensor types and room regimes on real deployments.
+The technical innovation is not the sensors; it is the provenance layer. Grow-room telemetry today cannot be told from a plausible simulation. Crowe Sense pairs a low-cost multi-sensor node with a structural test of the variation (day-to-day offset against the noise floor, residual autocorrelation) that rejects data a physical room could not have produced, and a practice envelope that judges readings against cited grower knowledge. The Phase I question is whether that test holds across sensor types and room regimes on real deployments.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
 This is a draft of the Project Pitch NSF requires before a full proposal; the next window opens November 4, 2026.
 
@@ -894,7 +894,7 @@ I am a mushroom producer in Phoenix preparing a Farmer/Rancher application for t
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
 Could you confirm that a producer-led equipment trial of this shape fits the program, and whether cooperating producers need to be named at application?
 
@@ -920,13 +920,13 @@ Caveat: FY2026 deadlines have passed and the FY2027 NOFO was not yet posted as o
 ---
 
 To: (named person, verified this week)  
-Subject: Partner inquiry: precision sensing for indoor mushroom cultivation
+Subject: AFRI partner inquiry: precision sensing for indoor mushroom cultivation
 
 AFRI's Agriculture Systems and Technology area covers precision sensing and engineering, and it favors research-institution-led projects. I am a grower with a working sensing platform and a public provenance test, looking for a university or extension partner to lead an AFRI application when the FY2027 program opens.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
 If your group works on controlled environment sensing, I would like twenty minutes to see whether there is a project here.
 
@@ -952,13 +952,13 @@ Caveat: Cycles are themed (Fall 2025 skewed SaaS), confirm the current theme and
 ---
 
 To: (named person, verified this week)  
-Subject: Arizona Innovation Challenge: current cycle theme?
+Subject: Arizona Innovation Challenge: next cycle and eligibility
 
 I am preparing to apply with Crowe Sense, a Phoenix-built sensing node for indoor agriculture with its software already shipped. The cycles are themed and the last one leaned SaaS.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
 What is the theme and window for the next cycle, and does a hardware-plus-software company with primary operations in Phoenix qualify?
 
@@ -984,13 +984,13 @@ Caveat: Funds cannot directly benefit a single commercial product; apply through
 ---
 
 To: (named person, verified this week)  
-Subject: Specialty crop block grant: a partner note to Arizona growers
+Subject: Specialty crop block grant: partner note for Arizona mushroom growers
 
 Cultivated mushrooms are a specialty crop, and the block grant cannot benefit a single company, so this is a note to a grower association rather than an application. I have a low-cost sensing node and a public method for judging room conditions against documented practice; framed as a benefit to Arizona mushroom and controlled-environment growers, it could carry a block grant project.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end. No node has yet run with physical sensors in a room, and I say that first because in August my own provenance test showed an earlier dataset of mine was not sensor data, and I pulled the claim and wrote the correction. That test now gates everything this company publishes. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
 
 If your association or research program would lead an FY2027 application with me as the technology partner, I would like to talk before the window opens.
 

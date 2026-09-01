@@ -1,4 +1,4 @@
-# Crowe Sense: investor report
+# Crowe Sense, investor report (September 2026)
 
 Crowe Logic, Inc., Phoenix, Arizona. Prepared 2026-09-01 for a list of thirty investors
 and funders (`docs/investors-30.csv`). Every number below is either measured in this
