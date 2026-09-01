@@ -23,5 +23,8 @@ You usually come in alongside a lead. I would like you to know us before the lea
 Repo and report: https://github.com/MichaelCrowe11/crowe-sense (branch integrate/2026-09-01, docs/investor-report.md)
 
 Michael Crowe
-Crowe Logic, Inc., Phoenix
-michael@crowelogic.com
+Founder, Crowe Logic
+Cultivation intelligence for serious growers. Grower since 2005.
+
+michael@crowelogic.com  |  crowelogic.com
+Southwest Mushrooms on YouTube: youtube.com/@SouthwestMushrooms

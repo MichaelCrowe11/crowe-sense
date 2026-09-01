@@ -21,5 +21,8 @@ This is a draft of the Project Pitch NSF requires before a full proposal; the ne
 Repo: https://github.com/MichaelCrowe11/crowe-sense (branch integrate/2026-09-01)
 
 Michael Crowe
-Crowe Logic, Inc., Phoenix
-michael@crowelogic.com
+Founder, Crowe Logic
+Cultivation intelligence for serious growers. Grower since 2005.
+
+michael@crowelogic.com  |  crowelogic.com
+Southwest Mushrooms on YouTube: youtube.com/@SouthwestMushrooms
