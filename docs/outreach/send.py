@@ -39,6 +39,9 @@ for r in todo:
     msg = EmailMessage()
     msg["From"] = f"Michael Crowe <{frm}>"; msg["To"] = to; msg["Subject"] = subject
     msg["Reply-To"] = frm
+    film = (r.get("film_url") or "").strip()
+    if film:
+        body = body.replace("The investor report is attached.", f"The investor report is attached, and here is a two-minute film made for you: {film}")
     msg.set_content(body)
     msg.add_attachment(open(PDF, "rb").read(), maintype="application", subtype="pdf", filename="crowe-sense-investor-report.pdf")
     if DRY:
