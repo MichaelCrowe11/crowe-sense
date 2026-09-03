@@ -10,11 +10,13 @@ Caveat: Fits Michael Crowe/Southwest Mushrooms personally as the producer-applic
 To: (named person, verified this week)  
 Subject: Farmer/Rancher grant: producer-led sensing trial in mushroom rooms
 
-I am a mushroom producer in Phoenix preparing a Farmer/Rancher application for the October 28 deadline: a producer-led trial placing low-cost environmental sensing nodes in working mushroom grow rooms and sharing what the readings show against documented practice, with outreach through a channel of about 195,000 growers. I am not claiming a commercial farm; the trial rooms are at my own growing site and at cooperating producers.
+Miranda,
+
+I am a mushroom producer in Phoenix preparing a Farmer/Rancher application for the October 28 deadline: a producer-led trial placing low-cost environmental sensing nodes in working mushroom grow rooms and sharing what the readings show against documented practice, with outreach through a channel of about 340,000 growers. I am not claiming a working fruiting farm: my operation today is a spawn and culture lab, and the trial rooms would be at cooperating producers, with the formulation, data and outreach work done at the lab.
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end; the pilot puts the first nodes in real rooms. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms. I have grown mushrooms since 2005, about ten of those years commercially, and about 340,000 people follow the channel where I teach it.
 
 Could you confirm that a producer-led equipment trial of this shape fits the program, and whether cooperating producers need to be named at application?
 

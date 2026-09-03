@@ -16,9 +16,11 @@ Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sens
 
 The software is built and tested end to end; the pilot puts the first nodes in real rooms.
 
-I am raising $175,000 on a SAFE to put twenty-five nodes in ten growers' rooms and prove the data. Cloud and analytics are already covered by credits, so the money is hardware and people. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
+I am raising $175,000 on a SAFE to put twenty-five nodes in ten growers' rooms and prove the data. Cloud and analytics are already covered by credits, so the money is hardware and people. I have grown mushrooms since 2005, about ten of those years commercially, and about 340,000 people follow the channel where I teach it.
 
-What is the next application window, and is there anything you want to see before the screening?
+Your funding page says SAFE notes are not considered. I am raising on a SAFE today; if the group would rather see a capped convertible note or priced equity, tell me before the screening and I will come with numbers for that structure.
+
+What is the next application window, and is there anything else you want to see before the screening?
 
 The investor report is attached. The code, the firmware and the enclosure are public at https://github.com/MichaelCrowe11/crowe-sense
 

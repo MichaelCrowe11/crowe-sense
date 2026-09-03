@@ -14,9 +14,9 @@ I am preparing a Phase I application for a Raspberry Pi based environmental sens
 
 Crowe Sense is a sensing node for a growing room: a Raspberry Pi 5 and four Sensirion and Bosch sensors under a louvered radiation shield, in a 3D-printed housing, about $280 in parts. Every reading stays on the node and a signed copy goes to a relay, so the same numbers show up in the desktop app, the web app, the phone, the terminal and any screen in the room. The readings are judged against 43 condition bands taken from my own cultivation videos, each cited to the clip it came from.
 
-The software is built and tested end to end; the pilot puts the first nodes in real rooms. I have grown mushrooms since 2005, about ten of those years commercially, and roughly 195,000 people follow the channel where I teach it.
+The software is built and tested end to end; the pilot puts the first nodes in real rooms. I have grown mushrooms since 2005, about ten of those years commercially, and about 340,000 people follow the channel where I teach it.
 
-Which current topic area is the right home for this, and is the $175,000 ceiling the one to plan against for it? Applicant is Crowe Logic, Inc., a majority US-owned for-profit small business.
+Topic 8.13, Plant Production and Protection: Engineering, looks like the right home. Is that the topic to write to, and is the $175,000 ceiling the one to plan against for it? I do not see an FY2026 or FY2027 Phase I announcement posted yet; if a release date is known, that would settle my calendar. Applicant is Crowe Logic, Inc., a majority US-owned for-profit small business.
 
 The investor report is attached. The code, the firmware and the enclosure are public at https://github.com/MichaelCrowe11/crowe-sense
 

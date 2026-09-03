@@ -37,3 +37,22 @@ film/out/
 film/assets/cad-*.stl
 film/assets/report-top.png
 film/__pycache__/
+
+# outreach working files: never publish contact lists or send logs
+docs/outreach/recipients.csv
+docs/outreach/sent-log.csv
+docs/*.bak-*
+film/assets/_ansiframes/
+film/assets/cli_frames/
+film/assets/dashrec/
+
+# film renders and raw footage stay local
+film/footage/
+film/out2/
+film/out2-v1/
+film/out2-v2/
+film/assets/*_frames/
+film/assets/*rec/
+film/assets/phonecomp/
+film/assets/turntable/
+film/assets/*.mp4

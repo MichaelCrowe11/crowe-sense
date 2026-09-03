@@ -23,7 +23,7 @@ test that caught the company's own synthetic stream in August.
 | Piece | State | Evidence |
 |---|---|---|
 | Firmware 0.2.0 (sampler, uploader, local API, watchdog, 6 drivers) | built | 51 tests, ruff clean, `firmware/` |
-| Relay (Cloudflare Worker: signed ingest, D1, R2, Crowe ID reads) | built, not deployed | 7 end-to-end tests, `relay/` |
+| Relay (Cloudflare Worker: signed ingest, D1, R2, Crowe ID reads) | deployed at sense.crowelogic.com | 7 end-to-end tests, `relay/`; `/health` live 2026-09-02 |
 | Contract every surface shares | written | `contracts/telemetry-v1.md` |
 | Desktop app integration (Environment lane fills itself) | branch `feat/crowe-sense` | 14 tests + 67 parity tests |
 | Terminal (`crowe sense`, 7 subcommands) | branch `feat/crowe-sense` | 25 tests; full suite 2,215 green |
@@ -42,9 +42,10 @@ daemon ran the whole software path for 23 days in May and June 2026 and produced
 3,596,420 rows across 20 metrics. On 2026-08-04 the founder's own provenance test
 (`analysis/provenance_check.py`) showed the tent temperature, humidity and light channels
 were not sensor measurements; no sensors had been installed in those tents. The founder
-confirmed it the same day and drafted a correction to the published Zenodo record
-(10.5281/zenodo.20722953). That correction is written and, as of this report, not yet
-pushed to Zenodo; it goes up before this report goes out.
+confirmed it the same day and wrote a correction to the published Zenodo record
+(10.5281/zenodo.20722953). As of this revision (2026-09-02) that correction has not yet
+been filed as a new version of the record. It is available on request, and until it is
+filed the zone channels in the public record should be read as unverified.
 
 **No revenue on this product.** The company's software surfaces have no paying
 subscribers. The founder's businesses have sold cultivation products and courses; none of
@@ -62,7 +63,7 @@ selling something a sensor vendor cannot: numbers a grower can trust.
 
 Michael Crowe has grown mushrooms since 2005, starting at fifteen, about ten of those
 years commercially (Southwest Mushrooms, Phoenix; the farm closed in February 2025).
-About 195,000 people subscribe to his cultivation channel; 68 of those videos were
+About 342,000 people subscribe to his cultivation channel (YouTube, read 2026-09-02); 68 of those videos were
 parsed into 642 numeric constants, of which 43 survive as condition bands a sensor can be
 judged against, with a documented rule that a band needs two independent statements
 before it judges anything. Nobody else can ship that layer, because nobody else has the
@@ -143,6 +144,7 @@ and a wrong one costs more than a blank.
 
 ## Where everything is
 
-`github.com/MichaelCrowe11/crowe-sense`, branch `integrate/2026-09-01`: firmware,
-relay, contract, enclosures, archive with the correction, analysis, the six integrations,
-the shopping list, the setup pipeline, and this report.
+`github.com/MichaelCrowe11/crowe-sense` (public): firmware, hardware and enclosures, docs.
+Branch `integrate/2026-09-01`, shared on request until it is pushed: relay, contract,
+archive with the correction, analysis, the six integrations, the shopping list, the setup
+pipeline, and this report. Revised 2026-09-02.

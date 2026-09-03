@@ -1,1 +1,1 @@
-ℹ tests 7 ℹ pass 7 ℹ fail 0 
+tests 7 pass 7 fail 0 

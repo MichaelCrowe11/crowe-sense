@@ -125,7 +125,7 @@ footer p{max-width:none}
   <div><div class="n">0</div><div class="l">nodes that have run with physical sensors in a room. That is the gap this raise closes</div></div>
   <div><div class="n">$175<small>k</small></div><div class="l">the ask, on a SAFE; cloud and analytics already covered by credits</div></div>
 </div>
-<p class="strip-note">Sources: firmware 51, relay 7, CLI 25, desktop 14, Cortex 8 tests; hardware/SHOPPING-LIST.md; analysis/practice-envelope; docs/investor-report.md in github.com/MichaelCrowe11/crowe-sense, branch integrate/2026-09-01.</p>
+<p class="strip-note">Sources: firmware 51, relay 7, CLI 25, desktop 14, Cortex 8 tests; hardware/SHOPPING-LIST.md; analysis/practice-envelope; docs/investor-report.md in github.com/MichaelCrowe11/crowe-sense, branch integrate/2026-09-01 (shared on request until pushed).</p>
 
 <section class="sec">
   <div class="rail">In one paragraph</div>
@@ -150,7 +150,7 @@ footer p{max-width:none}
     <div class="tw"><table>
       <tr><th>Piece</th><th>State</th><th>Evidence</th></tr>
       <tr><td class="k">Firmware 0.2.0: sampler, signed uploader, local API, watchdog, six drivers</td><td><span class="pill ok">built</span></td><td>51 tests, ruff clean</td></tr>
-      <tr><td class="k">Relay: signed ingest, D1, R2, Crowe ID reads</td><td><span class="pill wait">built, not deployed</span></td><td>7 end-to-end tests including signature verification</td></tr>
+      <tr><td class="k">Relay: signed ingest, D1, R2, Crowe ID reads</td><td><span class="pill ok">deployed</span></td><td>sense.crowelogic.com, /health live 2026-09-02; 7 end-to-end tests including signature verification</td></tr>
       <tr><td class="k">Contract every surface shares</td><td><span class="pill ok">written</span></td><td>contracts/telemetry-v1.md, JSON schema, D1 schema</td></tr>
       <tr><td class="k">Desktop app: the Environment lane fills itself with measured rows</td><td><span class="pill wait">branch</span></td><td>14 tests + 67 parity tests</td></tr>
       <tr><td class="k">Terminal: <code>crowe sense</code>, seven subcommands</td><td><span class="pill wait">branch</span></td><td>25 tests; full suite 2,215 green</td></tr>
@@ -169,7 +169,7 @@ footer p{max-width:none}
   <div class="rail warn">Not proven, said first</div>
   <div class="body">
     <h2>What is not proven</h2>
-    <p><strong>No Crowe Sense node has run with physical sensors in a growing room.</strong> An earlier daemon ran the whole software path for 23 days in May and June 2026 and produced 3,596,420 rows across 20 metrics. On 2026-08-04 the founder's own provenance test showed the tent temperature, humidity and light channels were not sensor measurements; no sensors had been installed in those tents. The founder confirmed it the same day and drafted a correction to the published Zenodo record (10.5281/zenodo.20722953). The correction is written and goes up before this report goes out.</p>
+    <p><strong>No Crowe Sense node has run with physical sensors in a growing room.</strong> An earlier daemon ran the whole software path for 23 days in May and June 2026 and produced 3,596,420 rows across 20 metrics. On 2026-08-04 the founder's own provenance test showed the tent temperature, humidity and light channels were not sensor measurements; no sensors had been installed in those tents. The founder confirmed it the same day and wrote a correction to the published Zenodo record (10.5281/zenodo.20722953). As of this revision (2026-09-02) that correction has not yet been filed as a new version of the record. It is available on request, and until it is filed the zone channels in the public record should be read as unverified.</p>
     <p><strong>No revenue on this product.</strong> The company's software surfaces have no paying subscribers. The founder's businesses have sold cultivation products and courses; none of that is attributed here.</p>
     <p><strong>Yield prediction is not built.</strong> The dataset that would train it, sensor windows joined to harvest outcomes, has zero labelled rows. The tools to log stages and harvests exist; the pilot fills them.</p>
     <p>The reason to say this first: the provenance test is the asset. A company that caught its own synthetic data, published the method, and gates every future dataset on it is selling something a sensor vendor cannot: numbers a grower can trust.</p>
@@ -180,7 +180,7 @@ footer p{max-width:none}
   <div class="rail">The founder</div>
   <div class="body">
     <h2>Why this founder</h2>
-    <p>Michael Crowe has grown mushrooms since 2005, starting at fifteen, about ten of those years commercially (Southwest Mushrooms, Phoenix; the farm closed in February 2025). About 195,000 people subscribe to his cultivation channel; 68 of those videos were parsed into 642 numeric constants, of which 43 survive as condition bands a sensor can be judged against, with a documented rule that a band needs two independent statements before it judges anything. Nobody else can ship that layer, because nobody else has the corpus. He also built every surface in the table above.</p>
+    <p>Michael Crowe has grown mushrooms since 2005, starting at fifteen, about ten of those years commercially (Southwest Mushrooms, Phoenix; the farm closed in February 2025). About 342,000 people subscribe to his cultivation channel (YouTube, read 2026-09-02); 68 of those videos were parsed into 642 numeric constants, of which 43 survive as condition bands a sensor can be judged against, with a documented rule that a band needs two independent statements before it judges anything. Nobody else can ship that layer, because nobody else has the corpus. He also built every surface in the table above.</p>
   </div>
 </section>
 
@@ -311,6 +311,6 @@ footer p{max-width:none}
 </section>
 
 <footer>
-  <p>Crowe Logic, Inc. &middot; github.com/MichaelCrowe11/crowe-sense, branch integrate/2026-09-01: firmware, relay, contract, enclosures, archive with the correction, analysis, the six integrations, the shopping list, the setup pipeline, and this report as docs/investor-report.md. Prepared 2026-09-01. Nothing here is a projection dressed as a fact.</p>
+  <p>Crowe Logic, Inc. &middot; github.com/MichaelCrowe11/crowe-sense (public): firmware, hardware and enclosures, docs. Branch integrate/2026-09-01, shared on request until it is pushed: relay, contract, archive with the correction, analysis, the six integrations, the shopping list, the setup pipeline, and this report as docs/investor-report.md. Prepared 2026-09-01, revised 2026-09-02. Nothing here is a projection dressed as a fact.</p>
 </footer>
 </div>

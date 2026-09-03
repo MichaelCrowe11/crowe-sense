@@ -56,7 +56,7 @@ for r in todo:
     print(f"{r['n']:>2} {r['name']} -> {to}: {result}")
     if result == "accepted":
         r["status"] = "sent"; r["sent_on"] = stamp
-    time.sleep(2)
+    time.sleep(6)
 if srv: srv.quit()
 if not DRY:
     with open(os.path.join(HERE, "recipients.csv"), "w", newline="") as f:

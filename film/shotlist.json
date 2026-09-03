@@ -1,0 +1,43 @@
+{
+ "open": [
+  "/Users/crowelogic/crowe-sense/film/footage/clips/bgqt0q1I7J8_000.mp4",
+  "/Users/crowelogic/crowe-sense/film/footage/clips/9BaXvKDDRGY_003.mp4",
+  "/Users/crowelogic/crowe-sense/film/footage/clips/aP5qnadCPUs_062.mp4"
+ ],
+ "what": [
+  "/Users/crowelogic/crowe-sense/film/assets/turntable.mp4",
+  "/Users/crowelogic/crowe-sense/film/footage/clips/bgqt0q1I7J8_016.mp4",
+  "/Users/crowelogic/crowe-sense/film/footage/clips/z2fpfQGNbQA_073.mp4"
+ ],
+ "path": [
+  "/Users/crowelogic/crowe-sense/film/assets/cli.mp4",
+  "/Users/crowelogic/crowe-sense/film/assets/mobile.mp4",
+  "/Users/crowelogic/crowe-sense/film/assets/desktop.mp4"
+ ],
+ "dash": [
+  "/Users/crowelogic/crowe-sense/film/assets/dashboard.mp4"
+ ],
+ "envelope": [
+  "/Users/crowelogic/crowe-sense/film/footage/clips/dzNjDmP3Cgw_017.mp4",
+  "/Users/crowelogic/crowe-sense/film/assets/envelope.mp4"
+ ],
+ "proven": [
+  "/Users/crowelogic/crowe-sense/film/assets/tests.mp4",
+  "/Users/crowelogic/crowe-sense/film/assets/relay.mp4"
+ ],
+ "notproven": [
+  "/Users/crowelogic/crowe-sense/film/footage/clips/bgqt0q1I7J8_001.mp4",
+  "/Users/crowelogic/crowe-sense/film/footage/clips/z2fpfQGNbQA_004.mp4",
+  "/Users/crowelogic/crowe-sense/film/footage/clips/aP5qnadCPUs_062.mp4"
+ ],
+ "founder": [
+  "/Users/crowelogic/crowe-sense/film/footage/clips/aP5qnadCPUs_052.mp4",
+  "/Users/crowelogic/crowe-sense/film/footage/clips/Z8USXz3A1YE_007.mp4",
+  "/Users/crowelogic/crowe-sense/film/footage/clips/dzNjDmP3Cgw_015.mp4"
+ ],
+ "ask": [
+  "/Users/crowelogic/crowe-sense/film/footage/clips/9BaXvKDDRGY_010.mp4",
+  "/Users/crowelogic/crowe-sense/film/footage/clips/dzNjDmP3Cgw_022.mp4",
+  "/Users/crowelogic/crowe-sense/film/footage/clips/bgqt0q1I7J8_016.mp4"
+ ]
+}
