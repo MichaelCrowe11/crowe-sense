@@ -41,6 +41,15 @@ class NodeConfig:
     relay_url: str = ""
     sensors_enabled: tuple[str, ...] = DEFAULT_SENSORS
     api_port: int = 8078
+    # The writable half of the node (crowe/operations.py). Off unless node.toml
+    # turns it on, and then only with an operator token on the direct path.
+    operations_enabled: bool = False
+    operator_token_path: Path = Path("/etc/crowe/operator.token")
+    operations_simulate: bool = False
+    # Driver tags: what a person knows about this installation that the code
+    # does not (where the head sits, what the room is for). Descriptive only;
+    # nothing here changes what the node enforces.
+    tags: tuple[str, ...] = ()
 
     @property
     def db_path(self) -> Path:
@@ -49,6 +58,10 @@ class NodeConfig:
     @property
     def frames_dir(self) -> Path:
         return self.storage_mount / "frames"
+
+    @property
+    def operations_db_path(self) -> Path:
+        return self.storage_mount / "db" / "operations.sqlite"
 
 
 def _config_path() -> Path:
@@ -65,6 +78,8 @@ def load() -> NodeConfig:
     s3 = data.get("s3")
     relay = data.get("relay", {})
     sensors = data.get("sensors", {})
+    ops = data.get("operations", {})
+    device = data.get("device", {})
     return NodeConfig(
         node_id=data["node_id"],
         site=data["site"],
@@ -82,6 +97,10 @@ def load() -> NodeConfig:
         relay_url=str(relay.get("url", "")).rstrip("/"),
         sensors_enabled=tuple(sensors.get("enabled", DEFAULT_SENSORS)),
         api_port=int(data.get("api", {}).get("port", 8078)),
+        operations_enabled=bool(ops.get("enabled", False)),
+        operator_token_path=Path(ops.get("token_path", "/etc/crowe/operator.token")),
+        operations_simulate=bool(ops.get("simulate", False)),
+        tags=tuple(str(t).strip() for t in device.get("tags", []) if str(t).strip()),
     )
 
 

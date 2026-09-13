@@ -34,6 +34,7 @@ crowe-watchdog  = "crowe.watchdog:main"
 crowe-health    = "crowe.health:main"
 crowe-provision = "crowe.provision:main"
 crowe-api       = "crowe.api:main"
+crowe-sense-mcp = "crowe.mcp:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

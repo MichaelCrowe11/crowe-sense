@@ -26,6 +26,14 @@ export function d1Store(DB, RAW) {
       await DB.prepare("UPDATE nodes SET last_seen_ts = MAX(COALESCE(last_seen_ts, 0), ?), readings_count = readings_count + ? WHERE node_id = ?").bind(ts, added, id).run();
     },
     async putRaw(key, bytes) { await RAW.put(key, bytes); },
+    // contracts/migrations/0002-node-descriptor.sql adds the two columns to a live DB.
+    async putDescriptor(id, text, ts) {
+      await DB.prepare("UPDATE nodes SET descriptor = ?, descriptor_ts = ? WHERE node_id = ?").bind(text, ts, id).run();
+    },
+    async getDescriptor(id) {
+      const r = await DB.prepare("SELECT descriptor, descriptor_ts AS ts FROM nodes WHERE node_id = ?").bind(id).first();
+      return r && r.descriptor ? r : null;
+    },
     async latest(id) {
       const { results } = await DB.prepare(
         "SELECT r.zone, r.sensor, r.metric, r.value, r.unit, r.quality, r.ts FROM readings r " +

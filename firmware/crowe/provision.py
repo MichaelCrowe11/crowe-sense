@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import json
 import secrets
 from pathlib import Path
 
@@ -52,6 +53,17 @@ def write_keypair(priv_path: Path, pub_path: Path) -> str:
     return pub_pem.decode()
 
 
+def write_operator_token(path: Path) -> str:
+    """Mint the bearer that authorizes a write. Written 0600 next to node.toml and
+    never printed by this tool: the operator copies the file, not a screen."""
+    from crowe.operations import make_token
+    token = make_token()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(token + "\n")
+    path.chmod(0o600)
+    return token
+
+
 def write_config(
     path: Path,
     node_id: str,
@@ -62,6 +74,9 @@ def write_config(
     zone: str | None = None,
     relay_url: str = DEFAULT_RELAY,
     sensors: tuple[str, ...] = ("scd41", "sht45", "bme688", "veml7700", "pi"),
+    operations: bool = False,
+    operator_token_path: Path | None = None,
+    tags: tuple[str, ...] = (),
 ) -> None:
     s3_block = f'''
 [s3]
@@ -70,6 +85,8 @@ prefix = ""
 region = "us-east-1"
 ''' if s3_bucket else ""
     enabled = ", ".join(f'"{s}"' for s in sensors)
+    tag_list = ", ".join(json.dumps(t) for t in tags)
+    token_path = operator_token_path or (path.parent / "operator.token")
     contents = f'''# Crowe Sense node configuration
 # Provisioned: do not edit by hand.
 
@@ -92,6 +109,19 @@ enabled = [{enabled}]
 [sampler.periods]
 # Override per-sensor cadences (seconds) here, e.g.:
 # scd41 = 10.0
+
+[device]
+# What a person knows about this installation that the code does not: where the
+# head sits, what the room is for. Read into GET /v1/describe. Descriptive only;
+# nothing here changes what the node enforces.
+tags = [{tag_list}]
+
+[operations]
+# The writable half (crowe/operations.py): indicator.identify and uplink.reset.
+# Off by default. On, every request needs the bearer in token_path, and only on
+# the direct path; the relay never carries a write.
+enabled = {"true" if operations else "false"}
+token_path = "{token_path}"
 '''
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(contents)
@@ -107,6 +137,9 @@ def main() -> None:
     p.add_argument("--s3-bucket", default="", help="optional S3 target instead of the relay")
     p.add_argument("--storage-mount", default="/mnt/crowe", type=Path)
     p.add_argument("--config-dir", default=CONFIG_DIR, type=Path)
+    p.add_argument("--operations", action="store_true",
+                   help="enable the writable operations and mint an operator token next to node.toml")
+    p.add_argument("--tag", action="append", default=[], help="a descriptive note for the descriptor; repeatable")
     args = p.parse_args()
 
     node_id = args.node_id or make_node_id()
@@ -115,11 +148,15 @@ def main() -> None:
     config_path = args.config_dir / "node.toml"
 
     pub_pem = write_keypair(private_key, public_key)
+    token_path = args.config_dir / "operator.token"
     write_config(
         config_path, node_id, args.site, args.s3_bucket, args.storage_mount, private_key,
         zone=args.zone, relay_url=args.relay.rstrip("/"),
         sensors=tuple(s.strip() for s in args.sensors.split(",") if s.strip()),
+        operations=args.operations, operator_token_path=token_path, tags=tuple(args.tag),
     )
+    if args.operations:
+        write_operator_token(token_path)
     b64 = public_key_b64(pub_pem)
     print(f"provisioned node {node_id} (zone {args.zone or node_id})")
     print(f"config: {config_path}")
@@ -127,6 +164,9 @@ def main() -> None:
     print("pair it from any machine signed in to Crowe ID:")
     print(f"  crowe sense pair {node_id} {b64} --zone {args.zone or node_id}")
     print("then reboot; the uploader starts pushing signed batches to the relay.")
+    if args.operations:
+        print(f"operations enabled; operator token in {token_path} (mode 600). Copy it to the machines that")
+        print("may operate this node. It is shown nowhere else and never leaves the node by itself.")
 
 
 if __name__ == "__main__":

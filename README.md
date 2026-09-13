@@ -11,7 +11,10 @@ is the plan and the ask that changes that. Read `docs/device-spec.md` for what i
 and what is not.
 
 ```
-contracts/      telemetry-v1.md, reading.schema.json, schema.sql: the one contract every surface shares
+contracts/      telemetry-v1.md, reading.schema.json, schema.sql: the one contract every surface shares;
+                device-descriptor-v0.md: what a node is and the one write door (informed by Anthropic's
+                Model Hardware Standard, not a conformance claim; the MHS spec is not public as of 2026-09)
+mcp_server.py   the node as an MCP server: describe, read, list operations, request an operation
 firmware/       Pi-side services (0.2.0): sampler, local API + kiosk page, signed uploader, watchdog; 51 tests
 relay/          Cloudflare Worker: signed ingest -> D1 + R2, Crowe ID gated reads; 7 tests
 app/            Tauri client for iPhone and Mac (0.2.0), direct or cloud source
@@ -31,6 +34,22 @@ cd firmware && python3 -m venv .venv && .venv/bin/pip install -e ".[dev]" && .ve
 cd relay && npm test
 cd app/src-tauri && cargo check
 ```
+
+## Describe the node, and operate it
+
+`GET /v1/describe` is the device descriptor: measurements with their sources and
+maker's ranges, the two operations (`indicator.identify`, `uplink.reset`) with the
+limits the node enforces and the code that enforces them, the access paths, and the
+operator's notes from `[device] tags` in node.toml. `crowe sense describe` prints it;
+`describe_device` returns it over MCP; the relay serves the node's signed copy at
+`/v1/nodes/<node>/describe`.
+
+Writes are one door, `POST /v1/operations/{operation}`, on the node only, with the
+operator token `crowe-provision --operations` mints (never through the relay). The API
+queues; the watchdog, the only process that owns the pins, runs it and records what
+happened, including `unknown` when it cannot say. `crowe sense operate`, the desktop's
+Crowe Sense plugin (behind a one-shot approval) and the MCP `request_operation` tool
+all go through that door. Contract: `contracts/device-descriptor-v0.md`.
 
 ## Read the readings
 

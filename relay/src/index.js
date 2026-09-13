@@ -18,6 +18,8 @@ function json(status, body, extra = {}) {
 const err = (status, error, detail) => json(status, { error, detail });
 
 /** Build the handler with injectable store and bearer verifier, so tests run it whole. */
+const MAX_DESCRIPTOR_BYTES = 64 * 1024;
+
 export function makeHandler({ store, bearer, now = () => Date.now() / 1000, staleAfter = 180, maxBody = 5 * 1024 * 1024 }) {
   async function owner(req) {
     const who = await bearer(req.headers.get("authorization"));
@@ -61,6 +63,29 @@ export function makeHandler({ store, bearer, now = () => Date.now() / 1000, stal
       return json(202, { accepted: added, received: readings.length, node: nodeId });
     }
 
+    // --- descriptor publish: signed by the node like a batch -----------------------------
+    // The relay stores the document and serves it read-only. It never carries a write
+    // back to the node; the descriptor itself says so (access.write_path: direct-only).
+    if (p === "/v1/descriptor") {
+      if (req.method !== "POST") return err(405, "method_not_allowed", "POST the node's signed descriptor here.");
+      const nodeId = req.headers.get("x-crowe-node") || "";
+      const sig = req.headers.get("x-crowe-signature") || "";
+      if (!NODE_RE.test(nodeId)) return err(401, "unknown_node", "x-crowe-node is missing or malformed.");
+      const bytes = new Uint8Array(await req.arrayBuffer());
+      if (bytes.byteLength > MAX_DESCRIPTOR_BYTES) return err(413, "too_large", `Descriptors are capped at ${MAX_DESCRIPTOR_BYTES} bytes.`);
+      const node = await store.getNode(nodeId);
+      if (!node) return err(401, "unknown_node", `Node ${nodeId} is not paired. Run: crowe sense pair.`);
+      if (!(await verifyBatch(node.public_key, sig, bytes))) return err(401, "bad_signature", "The descriptor signature did not verify against the node's registered key.");
+      let doc;
+      try { doc = JSON.parse(new TextDecoder().decode(bytes)); } catch { return err(400, "bad_body", "The descriptor must be a JSON object."); }
+      if (!doc || typeof doc !== "object" || Array.isArray(doc)) return err(400, "bad_body", "The descriptor must be a JSON object.");
+      if (typeof doc.schema !== "string" || !doc.identity || doc.identity.node !== nodeId)
+        return err(400, "bad_descriptor", "A descriptor carries a schema id and identity.node equal to the signing node.");
+      const t = now();
+      await store.putDescriptor(nodeId, JSON.stringify(doc), t);
+      return json(202, { node: nodeId, revision: doc.revision || null, stored_ts: t });
+    }
+
     // --- everything else needs a Crowe ID ---------------------------------------------
     const who = await owner(req);
     if (!who) return err(401, "unauthorized", "Sign in with Crowe ID and send the access token as a bearer.");
@@ -90,6 +115,11 @@ export function makeHandler({ store, bearer, now = () => Date.now() / 1000, stal
     const t = now();
 
     if (sub === "/health") return json(200, health(node, t, staleAfter));
+    if (sub === "/describe") {
+      const d = await store.getDescriptor(nodeId);
+      if (!d) return err(404, "no_descriptor", "This node has not published a descriptor yet. Its uploader does so on start once its firmware knows how.");
+      return new Response(d.descriptor, { status: 200, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-crowe-stored-ts": String(d.ts), ...CORS } });
+    }
     if (sub === "/latest") {
       const rows = preferred(await store.latest(nodeId));
       return json(200, rows.map((r) => ({ ts: r.ts, node: nodeId, zone: r.zone, sensor: r.sensor, metric: r.metric, value: r.value, unit: r.unit, quality: r.quality || "ok" })));
@@ -108,7 +138,7 @@ export function makeHandler({ store, bearer, now = () => Date.now() / 1000, stal
       const rows = preferred((await store.historyRows(nodeId, zone, metric, t - hours * 3600)).map((r) => ({ ...r, zone, metric })));
       return json(200, { metric, zone, unit: rows[0]?.unit || "", step, points: bucket(rows, step) });
     }
-    return err(404, "not_found", "Paths under a node: /health, /latest, /api/data, /history.");
+    return err(404, "not_found", "Paths under a node: /health, /describe, /latest, /api/data, /history.");
   };
 }
 

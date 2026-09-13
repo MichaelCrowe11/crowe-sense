@@ -101,6 +101,13 @@ All `/v1/nodes/{node}/...` reads require that the bearer's email owns the node.
 Every error is `{"error": "<slug>", "detail": "<sentence>"}` with the right status. No
 HTML error pages on either surface.
 
+## Beside this contract: the descriptor and the operations door
+
+`GET /v1/describe` (node) and `GET /v1/nodes/{node}/describe` (relay) serve the device
+descriptor, and `POST /v1/operations/{operation}` (node only, operator bearer) is the one
+write a node accepts. Both are specified in `device-descriptor-v0.md`. They are additive
+to this contract and do not bump it.
+
 ## Versioning
 
 This is v1. Additive changes (new metrics, new fields) do not bump it. A field rename or a

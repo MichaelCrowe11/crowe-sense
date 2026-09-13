@@ -7,7 +7,9 @@ CREATE TABLE IF NOT EXISTS nodes (
   label        TEXT NOT NULL DEFAULT '',
   created_ts   REAL NOT NULL,
   last_seen_ts REAL,
-  readings_count INTEGER NOT NULL DEFAULT 0
+  readings_count INTEGER NOT NULL DEFAULT 0,
+  descriptor   TEXT,                    -- the node's device descriptor, verbatim (contracts/device-descriptor-v0.md)
+  descriptor_ts REAL                    -- when the node last published it
 );
 CREATE INDEX IF NOT EXISTS idx_nodes_owner ON nodes(owner_email);
 

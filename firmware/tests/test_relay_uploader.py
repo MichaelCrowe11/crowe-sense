@@ -89,3 +89,32 @@ def test_relay_upload_network_error_is_false():
     client = httpx.Client(transport=httpx.MockTransport(boom))
     from crowe.uploader import Batch
     assert relay_upload(client, "https://relay.test", Batch([1], b"x", b"y"), "cs-a1b2c3") is False
+
+
+def test_publish_descriptor_signs_the_exact_body_and_reports_rejection(tmp_path):
+    import base64
+    import json as _json
+
+    import httpx
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+    from crowe.uploader import publish_descriptor
+
+    key = Ed25519PrivateKey.generate()
+    doc = {"schema": "x", "revision": "r1", "identity": {"node": "cs-a1b2c3"}}
+    seen = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["url"] = str(request.url)
+        seen["headers"] = dict(request.headers)
+        seen["body"] = request.content
+        return httpx.Response(seen.get("status", 202), json={"node": "cs-a1b2c3"})
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    assert publish_descriptor(client, "https://relay.test", key, doc) is True
+    assert seen["url"] == "https://relay.test/v1/descriptor"
+    assert seen["headers"]["x-crowe-node"] == "cs-a1b2c3"
+    assert _json.loads(seen["body"]) == doc
+    key.public_key().verify(base64.b64decode(seen["headers"]["x-crowe-signature"]), seen["body"])
+    seen["status"] = 401
+    assert publish_descriptor(client, "https://relay.test", key, doc) is False

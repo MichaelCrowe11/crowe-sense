@@ -1,10 +1,16 @@
-"""Watchdog — liveness LEDs, hotspot reset, mount-state checks.
+"""Watchdog — liveness LEDs, hotspot reset, mount-state checks, and the executor
+for requested operations.
 
 GPIO map is fixed in docs/03-electronics-integration.md:
   17 green  heartbeat
   27 amber  sync activity (driven by the uploader via Unix socket)
   22 red    fault (drive missing or backhaul down)
   23 out    hotspot power-cycle (opto-FET)
+
+This process is the only owner of those pins. The API never touches them: it queues
+a request (crowe/operations.py) and the loop here runs it, so a requested identify
+blink or hotspot reset goes through the same hands, the same cooldown and the same
+status file as the watchdog's own behaviour.
 """
 
 from __future__ import annotations
@@ -15,7 +21,7 @@ import signal
 import time
 from pathlib import Path
 
-from crowe import config
+from crowe import config, operations
 from crowe.routing import current_uplink
 from crowe.storage import status as storage_status
 
@@ -61,28 +67,60 @@ class _Pins:
         self.reset_line.off()
 
 
-def run(cfg: config.NodeConfig, pins: _Pins, status_path: Path) -> None:
+def build_executor(cfg: config.NodeConfig, pins: _Pins) -> operations.Executor | None:
+    """The queue drainer, only when node.toml turns operations on. A read-only node
+    never opens the queue and never pretends it could act."""
+    if not cfg.operations_enabled:
+        return None
+    return operations.Executor(operations.open_queue(cfg.operations_db_path), pins,
+                               gpio_available=pins._real, simulate=cfg.operations_simulate)
+
+
+def run(cfg: config.NodeConfig, pins: _Pins, status_path: Path,
+        executor: operations.Executor | None = None, *, max_ticks: int | None = None,
+        sleep=time.sleep, install_signals: bool = True) -> None:
     heartbeat = True
     consecutive_backhaul_fails = 0
     last_reset_ts = 0.0
     stop = False
+    was_identifying = False
+    ticks = 0
 
     def _stop(*_):
         nonlocal stop
         stop = True
 
-    signal.signal(signal.SIGTERM, _stop)
-    signal.signal(signal.SIGINT, _stop)
+    if install_signals:
+        signal.signal(signal.SIGTERM, _stop)
+        signal.signal(signal.SIGINT, _stop)
 
-    while not stop:
+    while not stop and (max_ticks is None or ticks < max_ticks):
+        ticks += 1
         ms = storage_status(cfg.storage_mount)
         uplink = current_uplink()
 
-        pins.set("green", heartbeat)
-        heartbeat = not heartbeat
+        if executor is not None:
+            executor.tick()
+            if executor.last_reset_ts:
+                # A requested reset counts toward the automatic one's cooldown too.
+                last_reset_ts = max(last_reset_ts, executor.last_reset_ts)
 
         fault = not ms.mounted or uplink is None or uplink.kind == "unknown"
-        pins.set("red", fault)
+
+        if executor is not None and executor.identifying:
+            # indicator.identify: all three together, on the heartbeat's own rhythm,
+            # so a person can pick this node out of a rack. The fault light is not
+            # lost, only paused; it resumes the tick the blink ends.
+            for color in ("green", "amber", "red"):
+                pins.set(color, heartbeat)
+            was_identifying = True
+        else:
+            if was_identifying:
+                pins.set("amber", False)
+                was_identifying = False
+            pins.set("green", heartbeat)
+            pins.set("red", fault)
+        heartbeat = not heartbeat
 
         if uplink is None:
             consecutive_backhaul_fails += 1
@@ -99,11 +137,13 @@ def run(cfg: config.NodeConfig, pins: _Pins, status_path: Path) -> None:
             last_reset_ts = now
             consecutive_backhaul_fails = 0
 
-        _write_status(status_path, ms, uplink, fault)
-        time.sleep(1.0)
+        _write_status(status_path, ms, uplink, fault, gpio=pins._real,
+                      operations=executor is not None, identifying=executor is not None and executor.identifying)
+        sleep(1.0)
 
 
-def _write_status(path: Path, ms, uplink, fault) -> None:
+def _write_status(path: Path, ms, uplink, fault, *, gpio: bool = False,
+                  operations: bool = False, identifying: bool = False) -> None:
     import json
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps({
@@ -113,6 +153,11 @@ def _write_status(path: Path, ms, uplink, fault) -> None:
         "uplink": uplink.interface if uplink else None,
         "uplink_kind": uplink.kind if uplink else None,
         "fault": fault,
+        # Read by crowe.descriptor so the API can say whether the pin owner is real,
+        # rather than guessing from a process that cannot see the pins.
+        "gpio": bool(gpio),
+        "operations": bool(operations),
+        "identifying": bool(identifying),
     }))
 
 
@@ -124,8 +169,9 @@ def main() -> None:
 
     cfg = config.load()
     pins = _Pins()
-    log.info("watchdog started")
-    run(cfg, pins, args.status_path)
+    executor = build_executor(cfg, pins)
+    log.info("watchdog started (gpio=%s, operations=%s)", pins._real, executor is not None)
+    run(cfg, pins, args.status_path, executor)
 
 
 if __name__ == "__main__":

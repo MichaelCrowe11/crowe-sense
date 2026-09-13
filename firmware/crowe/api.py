@@ -1,8 +1,13 @@
-"""Local read API and kiosk dashboard, stdlib only, on 0.0.0.0:8078.
+"""Local API and kiosk dashboard, stdlib only, on 0.0.0.0:8078.
 
 Serves the read half of contracts/telemetry-v1.md straight from the sampler's SQLite so
 the Tauri app (direct mode), the kiosk display and `crowe sense` on the same network
 work with no cloud at all. The relay serves the identical paths for everything else.
+
+Also the node's one write door (contracts/device-descriptor-v0.md): GET /v1/describe
+says what the node is and what it enforces; POST /v1/operations/{id} queues one of the
+registry's operations for the watchdog, and only with the operator bearer. Reads stay
+open on the LAN; a write needs the token even from localhost.
 """
 
 from __future__ import annotations
@@ -11,6 +16,7 @@ import argparse
 import contextlib
 import json
 import logging
+import re
 import sqlite3
 import time
 from datetime import UTC, datetime
@@ -18,7 +24,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-from crowe import config
+from crowe import config, descriptor, operations
 from crowe.derive import dew_point_c, vpd_kpa
 from crowe.metrics import CHART_METRICS, metric_for, rank, unit_for
 
@@ -139,9 +145,61 @@ def build_data(conn: sqlite3.Connection, node_id: str, zone: str, hours: float, 
 
 
 DASHBOARD = Path(__file__).with_name("dashboard.html")
+MAX_OPERATION_BODY = 4096
+OP_ID_RE = r"^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$"
 
 
-def make_handler(db_path: Path, node_id: str, zone: str):
+class OperationsService:
+    """The API's view of the writable half: the descriptor, the token check and the
+    queue. The queue is opened lazily so a read-only node never creates it."""
+
+    def __init__(self, cfg: config.NodeConfig, status_path: Path | None = Path("/run/crowe/status.json")):
+        self.cfg = cfg
+        self.status_path = status_path
+        self._queue = None
+
+    @property
+    def enabled(self) -> bool:
+        return bool(self.cfg.operations_enabled)
+
+    def queue(self):
+        if self._queue is None:
+            self._queue = operations.open_queue(self.cfg.operations_db_path)
+        return self._queue
+
+    def describe(self, now: float) -> dict:
+        return descriptor.build(self.cfg, status_path=self.status_path, now=now)
+
+    def authorized(self, auth_header: str | None) -> bool:
+        h = str(auth_header or "")
+        if not h.lower().startswith("bearer "):
+            return False
+        return operations.token_matches(h[7:], self.cfg.operator_token_path)
+
+    def listing(self, now: float) -> dict:
+        recent = operations.recent(self.queue(), 20) if self.enabled else []
+        return {"enabled": self.enabled, "operations": operations.public_registry(), "recent": recent,
+                "cooldowns": {op: round(operations.cooldown_remaining(self.queue(), op, now), 1)
+                              for op in operations.REGISTRY} if self.enabled else {}}
+
+    def status(self, id_: str) -> dict | None:
+        return operations.get(self.queue(), id_) if self.enabled else None
+
+    def request(self, op_id: str, args: dict | None, requested_by: str, now: float) -> tuple[int, dict]:
+        """Validate, check the cooldown, queue. Returns (http status, body)."""
+        try:
+            operations.validate(op_id, args)
+        except operations.OperationError as e:
+            return e.status, {"error": e.code, "detail": e.detail}
+        remaining = operations.cooldown_remaining(self.queue(), op_id, now)
+        if remaining > 0:
+            return 429, {"error": "cooldown", "detail": f"{op_id} ran recently; try again in {remaining:.0f} s.",
+                         "retry_after_s": round(remaining, 1)}
+        row = operations.enqueue(self.queue(), op_id, args, requested_by, now)
+        return 202, row
+
+
+def make_handler(db_path: Path, node_id: str, zone: str, ops: OperationsService | None = None):
     class Handler(BaseHTTPRequestHandler):
         server_version = f"crowe-sense-api/{VERSION}"
 
@@ -164,14 +222,74 @@ def make_handler(db_path: Path, node_id: str, zone: str):
         def do_OPTIONS(self):
             self.send_response(204)
             self.send_header("Access-Control-Allow-Origin", "*")
-            self.send_header("Access-Control-Allow-Headers", "authorization, content-type")
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+            self.send_header("Access-Control-Allow-Headers", "authorization, content-type, x-crowe-operator")
             self.end_headers()
+
+        # The writable half and its descriptor. Answered before the samples DB is
+        # opened, because neither needs it and a node whose sampler has not started
+        # should still be able to say what it is.
+        def _ops_get(self, path: str, now: float) -> bool:
+            if path == "/v1/describe":
+                if ops is None:
+                    self._err(404, "not_configured", "This server was started without a node configuration.")
+                else:
+                    self._json(200, ops.describe(now))
+                return True
+            if path == "/v1/operations":
+                if ops is None:
+                    self._err(404, "not_configured", "This server was started without a node configuration.")
+                else:
+                    self._json(200, ops.listing(now))
+                return True
+            if path.startswith("/v1/operations/"):
+                id_ = path[len("/v1/operations/"):]
+                if ops is None or not ops.enabled:
+                    self._err(403, "operations_disabled", "Operations are off on this node (node.toml [operations] enabled = false).")
+                    return True
+                row = ops.status(id_)
+                if row is None:
+                    self._err(404, "not_found", f"No operation {id_}.")
+                else:
+                    self._json(200, row)
+                return True
+            return False
+
+        def do_POST(self):
+            u = urlparse(self.path)
+            path = u.path.rstrip("/")
+            now = time.time()
+            if not path.startswith("/v1/operations/"):
+                return self._err(404, "not_found", "POST /v1/operations/{operation} is the only write.")
+            if ops is None or not ops.enabled:
+                return self._err(403, "operations_disabled", "Operations are off on this node (node.toml [operations] enabled = false).")
+            # Authorization first, before the body is read or the operation named, so an
+            # unauthorized caller learns nothing about what exists.
+            if not ops.authorized(self.headers.get("Authorization")):
+                return self._err(401, "unauthorized", "Operations need the node's operator token as a bearer.")
+            op_id = path[len("/v1/operations/"):]
+            if not re.match(OP_ID_RE, op_id):
+                return self._err(404, "unknown_operation", "Operation ids look like indicator.identify.")
+            length = int(self.headers.get("Content-Length") or 0)
+            if length > MAX_OPERATION_BODY:
+                return self._err(413, "too_large", f"Operation bodies are capped at {MAX_OPERATION_BODY} bytes.")
+            raw = self.rfile.read(length) if length else b""
+            try:
+                body = json.loads(raw) if raw.strip() else {}
+            except ValueError:
+                return self._err(400, "bad_body", "Send a JSON object of arguments, or an empty body.")
+            args = body.get("args", body) if isinstance(body, dict) else body
+            who = str(self.headers.get("X-Crowe-Operator") or "")[:40] or self.client_address[0]
+            status, out = ops.request(op_id, args, who, now)
+            self._json(status, out)
 
         def do_GET(self):
             u = urlparse(self.path)
             q = parse_qs(u.query)
             path = u.path.rstrip("/") or "/"
             now = time.time()
+            if self._ops_get(path, now):
+                return
             try:
                 conn = connect(db_path)
             except sqlite3.Error as e:
@@ -201,7 +319,7 @@ def make_handler(db_path: Path, node_id: str, zone: str):
                     body["zone"] = q.get("zone", [zone])[0]
                     self._json(200, body)
                 else:
-                    self._err(404, "not_found", "Paths: /health, /api/data, /v1/latest, /v1/history.")
+                    self._err(404, "not_found", "Paths: /health, /api/data, /v1/latest, /v1/history, /v1/describe, /v1/operations.")
             except ValueError as e:
                 self._err(400, "bad_query", str(e))
             finally:
@@ -210,8 +328,9 @@ def make_handler(db_path: Path, node_id: str, zone: str):
     return Handler
 
 
-def serve(db_path: Path, node_id: str, zone: str, host: str = "0.0.0.0", port: int = 8078) -> ThreadingHTTPServer:
-    srv = ThreadingHTTPServer((host, port), make_handler(db_path, node_id, zone))
+def serve(db_path: Path, node_id: str, zone: str, host: str = "0.0.0.0", port: int = 8078,
+          ops: OperationsService | None = None) -> ThreadingHTTPServer:
+    srv = ThreadingHTTPServer((host, port), make_handler(db_path, node_id, zone, ops))
     return srv
 
 
@@ -222,7 +341,7 @@ def main() -> None:
     p.add_argument("--port", type=int, default=None)
     args = p.parse_args()
     cfg = config.load()
-    srv = serve(cfg.db_path, cfg.node_id, cfg.zone, args.host, args.port or cfg.api_port)
+    srv = serve(cfg.db_path, cfg.node_id, cfg.zone, args.host, args.port or cfg.api_port, ops=OperationsService(cfg))
     log.info("api serving %s on %s:%d", cfg.db_path, args.host, srv.server_port)
     with contextlib.suppress(KeyboardInterrupt):
         srv.serve_forever()

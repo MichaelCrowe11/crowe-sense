@@ -5,6 +5,25 @@ architectural shape is fixed in
 [`../docs/04-firmware-architecture.md`](../docs/04-firmware-architecture.md);
 this directory is the implementation.
 
+
+## The descriptor and the operations door (2026-09-13)
+
+| module | does |
+|---|---|
+| `crowe/descriptor.py` | builds the device descriptor from node.toml, the driver table and the operations registry; `GET /v1/describe` |
+| `crowe/operations.py` | the registry (`indicator.identify`, `uplink.reset`), validation with hard bounds, the SQLite queue, cooldowns, the executor, the operator token check |
+| `crowe/api.py` | `OperationsService`: `/v1/describe`, `/v1/operations`, `POST /v1/operations/{id}` (operator bearer, direct only) |
+| `crowe/watchdog.py` | `build_executor()` + a tick in the loop; identify blinks all three LEDs; status.json gains `gpio`, `operations`, `identifying` |
+| `crowe/uploader.py` | `publish_descriptor()` on start and daily, signed like a batch |
+| `crowe/mcp.py` | the node as an MCP server (stdio, stdlib); `crowe-sense-mcp`, or `python3 ../mcp_server.py` from a checkout |
+
+node.toml: `[device] tags = [...]` (descriptive), `[operations] enabled = false`,
+`token_path = "/etc/crowe/operator.token"`, optional `simulate = true` on a bench.
+`crowe-provision --operations --tag "..."` writes them and mints the token (mode 600).
+
+Tests: `tests/test_operations.py`, `test_descriptor.py`, `test_api_operations.py`,
+`test_mcp.py`, and the publish case in `test_relay_uploader.py`.
+
 ## Layout
 
 ```

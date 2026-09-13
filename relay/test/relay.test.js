@@ -147,3 +147,36 @@ test("errors are JSON with error and detail, never HTML", async () => {
   const b = await r.json();
   assert.ok(b.error && b.detail);
 });
+
+test("descriptor: a signed publish is stored and served read-only under the node; bad shapes and strangers are refused", async () => {
+  const { handle } = setup();
+  await pair(handle);
+  const doc = { schema: "https://sense.crowelogic.com/contracts/device-descriptor.v0.json", revision: "abc123", identity: { node: "cs-a1b2c3" },
+    access: { write_path: "direct-only", relay: { writes: false } }, annotations: { summary: "A node." } };
+  const bytes = Buffer.from(JSON.stringify(doc));
+  // before: nothing published
+  let r = await handle(req("/v1/nodes/cs-a1b2c3/describe", { headers: { authorization: "Bearer good" } }));
+  assert.equal(r.status, 404); assert.equal((await r.json()).error, "no_descriptor");
+  // unpaired node, bad signature, wrong node inside the document
+  r = await handle(req("/v1/descriptor", { method: "POST", headers: { "x-crowe-node": "cs-ffffff", "x-crowe-signature": signed(bytes) }, body: bytes }));
+  assert.equal(r.status, 401);
+  r = await handle(req("/v1/descriptor", { method: "POST", headers: { "x-crowe-node": "cs-a1b2c3", "x-crowe-signature": signed(Buffer.from("x")) }, body: bytes }));
+  assert.equal(r.status, 401); assert.equal((await r.json()).error, "bad_signature");
+  const foreign = Buffer.from(JSON.stringify({ ...doc, identity: { node: "cs-ffffff" } }));
+  r = await handle(req("/v1/descriptor", { method: "POST", headers: { "x-crowe-node": "cs-a1b2c3", "x-crowe-signature": signed(foreign) }, body: foreign }));
+  assert.equal(r.status, 400); assert.equal((await r.json()).error, "bad_descriptor");
+  // the real thing
+  r = await handle(req("/v1/descriptor", { method: "POST", headers: { "x-crowe-node": "cs-a1b2c3", "x-crowe-signature": signed(bytes) }, body: bytes }));
+  assert.equal(r.status, 202); assert.deepEqual(await r.json(), { node: "cs-a1b2c3", revision: "abc123", stored_ts: NOW });
+  r = await handle(req("/v1/nodes/cs-a1b2c3/describe", { headers: { authorization: "Bearer good" } }));
+  assert.equal(r.status, 200); assert.equal(r.headers.get("x-crowe-stored-ts"), String(NOW));
+  assert.deepEqual(await r.json(), doc, "served verbatim: the revision hash still holds");
+  // another Crowe ID cannot read it; no bearer cannot read it
+  r = await handle(req("/v1/nodes/cs-a1b2c3/describe", { headers: { authorization: "Bearer other" } }));
+  assert.equal(r.status, 404);
+  r = await handle(req("/v1/nodes/cs-a1b2c3/describe"));
+  assert.equal(r.status, 401);
+  // the relay carries no write path
+  r = await handle(req("/v1/nodes/cs-a1b2c3/operations/indicator.identify", { method: "POST", headers: { authorization: "Bearer good" } }));
+  assert.equal(r.status, 404);
+});

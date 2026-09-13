@@ -132,6 +132,36 @@ def relay_upload(client: httpx.Client, relay_url: str, batch: Batch, node_id: st
     return True
 
 
+DESCRIPTOR_REPUBLISH_S = 24 * 3600
+
+
+def publish_descriptor(client: httpx.Client, relay_url: str, key: Ed25519PrivateKey, doc: dict) -> bool:
+    """POST the device descriptor to the relay, signed like a batch, so cloud readers
+    can see what the node is and that its writes are direct-only. Best effort: a
+    refusal is logged and retried on the next cycle, never fatal to telemetry."""
+    body = json.dumps(doc, separators=(",", ":"), sort_keys=True).encode()
+    node_id = str(doc.get("identity", {}).get("node", ""))
+    try:
+        resp = client.post(
+            f"{relay_url}/v1/descriptor",
+            content=body,
+            headers={
+                "Content-Type": "application/json",
+                "X-Crowe-Node": node_id,
+                "X-Crowe-Signature": base64.b64encode(key.sign(body)).decode(),
+            },
+            timeout=30.0,
+        )
+    except httpx.HTTPError:
+        log.exception("descriptor publish failed (network)")
+        return False
+    if resp.status_code // 100 != 2:
+        log.warning("relay rejected descriptor: %s %s", resp.status_code, resp.text[:200])
+        return False
+    log.info("published descriptor revision %s", doc.get("revision"))
+    return True
+
+
 def mark_sent(conn: sqlite3.Connection, ids: list[int]) -> None:
     if not ids:
         return
@@ -214,11 +244,16 @@ def main() -> None:
     signal.signal(signal.SIGTERM, _stop)
     signal.signal(signal.SIGINT, _stop)
 
+    descriptor_published_ts = 0.0
     while not stop:
         uplink = current_uplink()
         if uplink is None:
             log.info("no default route; sleeping")
         else:
+            if cfg.relay_url and time.time() - descriptor_published_ts > DESCRIPTOR_REPUBLISH_S:
+                from crowe.descriptor import for_node
+                if publish_descriptor(client, cfg.relay_url, key, for_node()):
+                    descriptor_published_ts = time.time()
             sent = drain_once(conn, client, cfg, key)
             if sent:
                 log.info("drained %d rows via %s (%s)", sent, uplink.interface, uplink.kind)

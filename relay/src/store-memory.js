@@ -4,6 +4,7 @@ export function memoryStore() {
   const nodes = new Map();
   const readings = [];
   const raw = [];
+  const descriptors = new Map();
   return {
     async getNode(id) { return nodes.get(id) || null; },
     async listNodes(email) { return [...nodes.values()].filter((n) => n.owner_email === email); },
@@ -32,6 +33,8 @@ export function memoryStore() {
     async historyRows(id, zone, metric, since) {
       return readings.filter((r) => r.node === id && r.zone === zone && r.metric === metric && r.ts >= since).sort((a, b) => a.ts - b.ts);
     },
+    async putDescriptor(id, text, ts) { descriptors.set(id, { descriptor: text, ts }); },
+    async getDescriptor(id) { return descriptors.get(id) || null; },
     _raw: raw, _readings: readings,
   };
 }
