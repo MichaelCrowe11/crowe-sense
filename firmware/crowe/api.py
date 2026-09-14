@@ -157,6 +157,7 @@ class OperationsService:
         self.cfg = cfg
         self.status_path = status_path
         self._queue = None
+        operations.configure_actuators(cfg.actuators)
 
     @property
     def enabled(self) -> bool:

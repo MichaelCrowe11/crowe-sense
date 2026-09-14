@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import os
 import tomllib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 
@@ -26,6 +26,22 @@ class S3Config:
 
 DEFAULT_SENSORS = ("scd41", "sht45", "bme688", "veml7700", "pi")
 DEFAULT_RELAY = "https://sense.crowelogic.com"
+
+ACTUATOR_KINDS = ("exhaust_fan",)
+
+
+@dataclass(frozen=True, slots=True)
+class ActuatorConfig:
+    """One declared actuator. A node advertises an actuator only when node.toml
+    declares it here; the code for a kind existing is not the same as the hardware
+    being wired. Limits are the operator's, within the kind's own ceilings."""
+    name: str
+    kind: str
+    pin: int
+    max_on_s: float = 900.0
+    min_off_s: float = 120.0
+    min_co2_ppm: float = 0.0
+    max_reading_age_s: float = 180.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -50,6 +66,7 @@ class NodeConfig:
     # does not (where the head sits, what the room is for). Descriptive only;
     # nothing here changes what the node enforces.
     tags: tuple[str, ...] = ()
+    actuators: dict[str, ActuatorConfig] = field(default_factory=dict)
 
     @property
     def db_path(self) -> Path:
@@ -80,6 +97,7 @@ def load() -> NodeConfig:
     sensors = data.get("sensors", {})
     ops = data.get("operations", {})
     device = data.get("device", {})
+    actuators = _parse_actuators(data.get("actuators", {}))
     return NodeConfig(
         node_id=data["node_id"],
         site=data["site"],
@@ -101,7 +119,29 @@ def load() -> NodeConfig:
         operator_token_path=Path(ops.get("token_path", "/etc/crowe/operator.token")),
         operations_simulate=bool(ops.get("simulate", False)),
         tags=tuple(str(t).strip() for t in device.get("tags", []) if str(t).strip()),
+        actuators=actuators,
     )
+
+
+def _parse_actuators(raw: dict) -> dict[str, ActuatorConfig]:
+    """[actuators.<name>] tables. An unknown kind or a missing pin is refused at load,
+    not skipped: a node that silently drops an actuator would advertise less than it
+    has wired, and that is the dangerous direction."""
+    out: dict[str, ActuatorConfig] = {}
+    for name, spec in (raw or {}).items():
+        if not isinstance(spec, dict):
+            raise ValueError(f"[actuators.{name}] must be a table")
+        kind = str(spec.get("kind", name))
+        if kind not in ACTUATOR_KINDS:
+            raise ValueError(f"[actuators.{name}] kind {kind!r} is not one of {ACTUATOR_KINDS}")
+        if "pin" not in spec:
+            raise ValueError(f"[actuators.{name}] needs a pin")
+        out[str(name)] = ActuatorConfig(
+            name=str(name), kind=kind, pin=int(spec["pin"]),
+            max_on_s=float(spec.get("max_on_s", 900.0)), min_off_s=float(spec.get("min_off_s", 120.0)),
+            min_co2_ppm=float(spec.get("min_co2_ppm", 0.0)), max_reading_age_s=float(spec.get("max_reading_age_s", 180.0)),
+        )
+    return out
 
 
 def reset_cache() -> None:

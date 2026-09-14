@@ -122,6 +122,15 @@ tags = [{tag_list}]
 # the direct path; the relay never carries a write.
 enabled = {"true" if operations else "false"}
 token_path = "{token_path}"
+
+# An actuator appears in the descriptor, and its operation exists, only when it is
+# declared here. Declare it only once the relay board is wired. The first kind:
+# [actuators.exhaust_fan]
+# kind = "exhaust_fan"
+# pin = 24            # BCM; drives a normally-open relay so loss of power is off
+# max_on_s = 900      # auto-off; the kind's ceiling is 1800
+# min_off_s = 120     # spacing between runs, counted from the relay going off
+# min_co2_ppm = 0     # >0 refuses "on" while the room is already below this
 '''
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(contents)

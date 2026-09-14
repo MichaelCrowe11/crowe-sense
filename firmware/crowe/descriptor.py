@@ -131,6 +131,12 @@ def summary(doc: dict[str, Any]) -> str:
                      "; ".join(f"{o['id']}: {o['effect']}" for o in ops["list"]) + ".")
     else:
         lines.append("Operations: disabled on this node; it is read-only until an operator enables them in node.toml.")
+    if doc["actuators"]:
+        lines.append("Actuators: " + ", ".join(
+            f"{a['name']} ({a['kind']}, relay on GPIO {a['pin']}, at most {a['limits']['max_on_s']:g} s on, then off by itself)"
+            for a in doc["actuators"]) + ".")
+    else:
+        lines.append("No actuators are wired to this node; it observes and cannot change the room.")
     lines.append("Writes are accepted only on the direct path with an operator token. The relay is read-only.")
     if doc["annotations"]["tags"]:
         lines.append("Operator notes: " + " ".join(t if t.endswith(".") else t + "." for t in doc["annotations"]["tags"]))
@@ -148,6 +154,7 @@ def build(cfg: config.NodeConfig, *, status_path: Path | None = None, now: float
           relay_url: str | None = None, host: str = "<node>") -> dict[str, Any]:
     now = time.time() if now is None else now
     relay = (relay_url or cfg.relay_url or RELAY_DEFAULT).rstrip("/")
+    operations.configure_actuators(cfg.actuators)
     doc: dict[str, Any] = {
         "schema": SCHEMA_ID,
         "descriptor_version": DESCRIPTOR_VERSION,
@@ -160,6 +167,14 @@ def build(cfg: config.NodeConfig, *, status_path: Path | None = None, now: float
         "measurements": measurements(cfg.sensors_enabled, cfg.zone),
         "quality_states": QUALITY_STATES,
         "freshness": {"stale_after_s": STALE_AFTER_S},
+        "actuators": [
+            {"name": a.name, "kind": a.kind, "pin": a.pin, "operation": f"ventilation.{a.name}",
+             "limits": {"max_on_s": min(a.max_on_s, operations.EXHAUST_FAN_MAX_ON_CEILING_S), "min_off_s": a.min_off_s,
+                        "min_co2_ppm": a.min_co2_ppm, "max_reading_age_s": a.max_reading_age_s},
+             "fail_safe": "off at executor start and stop; normally-open relay so loss of power is off",
+             "readback": "commanded relay state only; airflow is not measured"}
+            for a in cfg.actuators.values()
+        ],
         "operations": {
             "enabled": bool(cfg.operations_enabled),
             "simulate": bool(cfg.operations_simulate),
