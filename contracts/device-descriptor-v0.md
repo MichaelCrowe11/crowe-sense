@@ -155,6 +155,39 @@ valves on it, and the descriptor does not pretend otherwise. When an actuator is
 it arrives as a registry entry with its bounds, its enforcer and its test, and the
 descriptor grows by exactly that.
 
+## Actuators: designed, not yet wired
+
+The first actuator is designed in code and tests so that its rules exist before a relay
+board does. It appears on a node only when `node.toml` declares it:
+
+```toml
+[actuators.exhaust_fan]
+kind = "exhaust_fan"
+pin = 24            # BCM; drives a normally-open relay so loss of power is off
+max_on_s = 900      # auto-off; the kind's ceiling is 1800 and an operator cannot raise it
+min_off_s = 120     # spacing between runs, counted from the relay going off
+min_co2_ppm = 0     # > 0 refuses "on" while the room is already at or below this
+```
+
+A declared actuator adds an `actuators[]` entry to the descriptor and one operation,
+`ventilation.<name>`, with `state` (`on` | `off`) and `seconds` (30 to `max_on_s`).
+
+| rule | enforced by |
+|---|---|
+| `seconds` bounded; `state` is `on` or `off` | `operations.validate`, before anything is queued |
+| auto-off when `seconds` elapse, checked every watchdog tick | `operations.Executor.tick` |
+| `min_off_s` between runs, counted from the relay going off, and from the executor's start (after a restart it cannot know what the relay was doing) | `operations.Executor` |
+| `on` needs a `co2_ppm` reading younger than `max_reading_age_s`; no reading, or no window onto readings at all, refuses | `operations.Executor`, reading the sampler's SQLite read-only |
+| `on` refused at or below `min_co2_ppm` when set | `operations.Executor` |
+| off at executor start, off at executor stop, `off` never refused and never interlocked | `operations.Executor`, `watchdog.run` finally |
+| loss of power is off | wiring: a normally-open relay |
+
+What the result reports is the commanded relay state, never airflow. A hard kill of the
+watchdog leaves the pin to gpiozero's exit cleanup and the wiring; the next start turns
+it off within a second. That is the guarantee, stated at its real strength.
+
+No node has this declared. Wire the board, declare it, and the descriptor tells the truth.
+
 ## Reaching it
 
 | surface | reads | writes |
